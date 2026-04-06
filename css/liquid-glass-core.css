@@ -48,23 +48,23 @@ a.liquid-glass:hover,
   z-index: 0;
   inset: 0;
   overflow: hidden;
-  backdrop-filter: blur(20px) saturate(170%) brightness(1.04) contrast(1.05);
-  -webkit-backdrop-filter: blur(20px) saturate(170%) brightness(1.04) contrast(1.05);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 
 /* Macros get real SVG displacement (3-5 elements per page max) */
 .lg-macro > .liquid-glass-effect {
-  backdrop-filter: blur(28px) saturate(180%) brightness(1.06) contrast(1.06) url(#lg-refract);
-  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.06) contrast(1.06);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
+  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 
 html:not(.dark) .liquid-glass-effect {
-  backdrop-filter: blur(20px) saturate(135%) brightness(1.02);
-  -webkit-backdrop-filter: blur(20px) saturate(135%) brightness(1.02);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 html:not(.dark) .lg-macro > .liquid-glass-effect {
-  backdrop-filter: blur(28px) saturate(150%) brightness(1.03) url(#lg-refract);
-  -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.03);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
+  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 
 /* Layer 1: base tint - VISIBLE color so glass shows on pure black */
@@ -73,16 +73,16 @@ html:not(.dark) .lg-macro > .liquid-glass-effect {
   z-index: 1;
   inset: 0;
   pointer-events: none;
-  background: rgba(28, 28, 32, 0.72);
+  background: rgba(28, 28, 32, 0.30);
 }
 .lg-macro > .liquid-glass-tint {
-  background: rgba(20, 20, 24, 0.66);
+  background: rgba(20, 20, 24, 0.30);
 }
 html:not(.dark) .liquid-glass-tint {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.40);
 }
 html:not(.dark) .lg-macro > .liquid-glass-tint {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.40);
 }
 
 /* Layer 2: inset rim highlights - the "lit bezel" (1:2 ratio = convex) */
@@ -207,12 +207,12 @@ html:not(.dark) .liquid-glass::after {
     display: none !important;
   }
   .liquid-glass-effect {
-    backdrop-filter: blur(16px) saturate(150%) brightness(1.04);
-    -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(1.04);
+    backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+    -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
   }
   .lg-macro > .liquid-glass-effect {
-    backdrop-filter: blur(22px) saturate(170%) brightness(1.06);
-    -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(1.06);
+    backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+    -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
   }
 }
 

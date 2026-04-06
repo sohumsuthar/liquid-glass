@@ -96,8 +96,8 @@ Apple's Control Center panels have a **visible dark-gray fill** even on black. T
 
 | Mode | Inner cards | Macro wrappers |
 |------|-------------|----------------|
-| Dark | `rgba(28, 28, 32, 0.72)` | `rgba(20, 20, 24, 0.66)` |
-| Light | `rgba(255, 255, 255, 0.78)` | `rgba(255, 255, 255, 0.70)` |
+| Dark | `rgba(28, 28, 32, 0.30)` | `rgba(20, 20, 24, 0.30)` |
+| Light | `rgba(255, 255, 255, 0.40)` | `rgba(255, 255, 255, 0.40)` |
 
 No blend mode. Just a partially-transparent fill.
 
@@ -215,7 +215,7 @@ The displacement PNG must be **base64-inlined** in the SVG. `feImage` silently f
 The CSS chains it with `backdrop-filter`:
 
 ```css
-backdrop-filter: blur(28px) saturate(180%) url(#lg-refract);
+backdrop-filter: blur(2px) saturate(180%) url(#lg-refract);
 ```
 
 **Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter` and fall back to the blur-only `-webkit-backdrop-filter`. Graceful degradation, not feature parity.
@@ -232,7 +232,7 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | `contain: layout paint` | Isolates repaint scope per card | ~20% paint reduction |
 | `isolation: isolate` | Reduces backdrop sample region | 30-40% filter cost |
 | SVG displacement on macros only | 3-5 filter passes instead of 20+ | ~75% displacement cost |
-| Blur capped at 28px | Safari downsamples past 25px anyway | ~45% vs 50px |
+| Blur capped at 2px | Clear glass - minimal blur cost | ~90% vs 28px |
 | Particle canvas at 30fps | Halves backdrop-filter cache invalidation | ~50% composite cost |
 | Touch gates `(hover: none)` | Disables spotlight, cursor, reveal, squash | 100% on mobile |
 
@@ -245,7 +245,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 - Scroll-velocity squash → disabled
 - Particle canvas → hidden
 - `content-visibility` → reverted to `visible`
-- Lighter blur (16-22px)
+- Matching 2px blur
 
 ---
 
@@ -312,13 +312,13 @@ From Apple.com DOM inspection and WWDC 2025 reverse engineering:
 
 | Property | Inner cards | Macro wrappers |
 |----------|-------------|----------------|
-| Blur radius | 20px | 28px |
-| Saturate | 170% | 180% |
-| Brightness | 1.04 | 1.06 |
-| Contrast | 1.05 | 1.06 |
+| Blur radius | 2px | 2px |
+| Saturate | 180% | 180% |
+| Brightness | 1.06 | 1.06 |
+| Contrast | 1.04 | 1.04 |
 | SVG displacement | - | scale 0.06 |
-| Dark tint | `rgba(28,28,32,0.72)` | `rgba(20,20,24,0.66)` |
-| Light tint | `rgba(255,255,255,0.78)` | `rgba(255,255,255,0.70)` |
+| Dark tint | `rgba(28,28,32,0.30)` | `rgba(20,20,24,0.30)` |
+| Light tint | `rgba(255,255,255,0.40)` | `rgba(255,255,255,0.40)` |
 | Border-radius | 22px | 22px |
 
 Apple motion curves:
