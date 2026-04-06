@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════════════
+   Bottom-left control dock — user-facing UI toggles
+   Desktop only (hover: hover) and (pointer: fine)
+   ═══════════════════════════════════════════════════════════════ */
+
+.lg-particle-toggle,
+.lg-glass-toggle,
+.lg-theme-toggle {
+  position: fixed;
+  left: 14px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(18, 18, 20, 0.55);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-apple-out);
+  white-space: nowrap;
+}
+.lg-particle-toggle { bottom: 14px; }
+.lg-glass-toggle { bottom: 46px; }
+.lg-theme-toggle { bottom: 78px; }
+
+.lg-particle-toggle:hover,
+.lg-glass-toggle:hover,
+.lg-theme-toggle:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(24, 24, 28, 0.75);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+html:not(.dark) .lg-particle-toggle,
+html:not(.dark) .lg-glass-toggle,
+html:not(.dark) .lg-theme-toggle {
+  color: rgba(0, 0, 0, 0.55);
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html:not(.dark) .lg-particle-toggle:hover,
+html:not(.dark) .lg-glass-toggle:hover,
+html:not(.dark) .lg-theme-toggle:hover {
+  color: rgba(0, 0, 0, 0.9);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .lg-particle-toggle,
+  .lg-glass-toggle,
+  .lg-theme-toggle,
+  .lg-particle-canvas {
+    display: none !important;
+  }
+}
+
+/* Particle canvas (fixed background) */
+.lg-particle-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -7;
+  opacity: 0.6;
+}
+html:not(.dark) .lg-particle-canvas {
+  opacity: 0.35;
+  filter: invert(1);
+}
+
+/* First-visit tooltip pointing to the dock */
+.lg-first-visit-tooltip {
+  position: fixed;
+  left: 120px;
+  bottom: 78px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(20, 20, 24, 0.85);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 8px 24px -4px rgba(0, 0, 0, 0.4),
+    0 0 0 0.5px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  animation:
+    lg-tooltip-in 0.5s var(--ease-apple-out),
+    lg-tooltip-out 0.4s var(--ease-apple-out) 8s forwards;
+}
+.lg-first-visit-tooltip-arrow {
+  opacity: 0.7;
+  animation: lg-tooltip-arrow 1.2s ease-in-out infinite;
+}
+html:not(.dark) .lg-first-visit-tooltip {
+  color: rgba(0, 0, 0, 0.95);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+@keyframes lg-tooltip-in {
+  from { opacity: 0; transform: translateX(-12px) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes lg-tooltip-out {
+  to { opacity: 0; transform: translateX(-12px) scale(0.95); }
+}
+@keyframes lg-tooltip-arrow {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-3px); }
+}
+@media (hover: none), (pointer: coarse) {
+  .lg-first-visit-tooltip { display: none !important; }
+}

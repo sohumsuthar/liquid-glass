@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════════════
+   Utilities: monospace, cursor blink, body typography
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Monospace — SF Mono on Apple, JetBrains/Fira fallback */
+.lg-mono {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-feature-settings: 'calt' 0, 'liga' 0;
+  letter-spacing: 0;
+}
+
+/* Terminal cursor blink */
+.lg-cursor-blink {
+  animation: lg-cursor-blink 1.08s step-end infinite;
+}
+@keyframes lg-cursor-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* Loading logo spin */
+.lg-logo-spin {
+  display: inline-block;
+  animation: lg-logo-spin 2.4s linear infinite;
+  will-change: transform;
+  transform-origin: center;
+}
+@keyframes lg-logo-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lg-logo-spin { animation-duration: 8s; }
+}
+
+/* Body typography — Apple system stack + antialiasing */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ss01' 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+               'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+body {
+  letter-spacing: -0.005em;
+}
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'ss01' 1;
+}
+time, .tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

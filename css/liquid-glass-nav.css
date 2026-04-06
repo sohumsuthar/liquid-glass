@@ -1,0 +1,214 @@
+/* ═══════════════════════════════════════════════════════════════
+   Navbar, buttons, links, tags, search input — Apple chrome UI
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Dynamic Island-style navbar pill */
+.lg-navbar {
+  position: relative;
+  border-radius: 9999px;
+  padding: 5px 5px 5px 10px;
+  background: rgba(28, 28, 30, 0.6);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.3),
+    0 10px 32px rgba(0, 0, 0, 0.25);
+  transition: all 0.4s var(--ease-apple-out);
+  animation: lg-navbar-enter 0.5s var(--ease-apple-out);
+}
+html:not(.dark) .lg-navbar {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 10px 32px rgba(0, 0, 0, 0.06);
+}
+@keyframes lg-navbar-enter {
+  0% { transform: translateY(-8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Sticky wrapper — navbar follows user through whole page */
+.lg-navbar-sticky {
+  position: sticky;
+  top: 12px;
+  z-index: 40;
+  transition: top 0.3s var(--ease-apple-out);
+}
+
+/* Circular icon buttons */
+.lg-nav-btn {
+  position: relative;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s var(--ease-apple-out);
+}
+.lg-nav-btn:hover {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.lg-nav-btn:active { transform: scale(0.92); transition-duration: 0.1s; }
+html:not(.dark) .lg-nav-btn {
+  color: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html:not(.dark) .lg-nav-btn:hover {
+  color: rgba(0, 0, 0, 1);
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Text nav links (pill) */
+.lg-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  border-radius: 9999px;
+  padding: 0 9px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+  border: none;
+  transition: all 0.2s var(--ease-apple-out);
+  white-space: nowrap;
+}
+.lg-nav-link:hover {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.08);
+}
+.lg-nav-link:active { transform: scale(0.96); transition-duration: 0.1s; }
+.lg-nav-link.is-active {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.12);
+}
+html:not(.dark) .lg-nav-link { color: rgba(0, 0, 0, 0.72); }
+html:not(.dark) .lg-nav-link:hover {
+  color: rgba(0, 0, 0, 1);
+  background: rgba(0, 0, 0, 0.06);
+}
+html:not(.dark) .lg-nav-link.is-active {
+  color: rgba(0, 0, 0, 1);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Apple Intelligence rainbow gradient border (animated) */
+@property --lg-ai-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.lg-ai-gradient {
+  position: relative;
+  color: rgba(255, 255, 255, 1);
+  background: rgba(10, 10, 14, 0.6);
+  border: none;
+  isolation: isolate;
+  overflow: hidden;
+}
+.lg-ai-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--lg-ai-angle) at 50% 50%,
+    #ff6b9d 0deg, #c06dff 72deg, #4facfe 144deg,
+    #43e97b 216deg, #fee140 288deg, #ff6b9d 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: lg-ai-angle-spin 4s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes lg-ai-angle-spin { to { --lg-ai-angle: 360deg; } }
+
+/* Apple-style glass pill tags */
+.lg-tag {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.2s var(--ease-apple-out);
+}
+.lg-tag:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-0.5px);
+}
+html:not(.dark) .lg-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.05);
+}
+html:not(.dark) .lg-tag:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Spotlight-style search input */
+.lg-search-input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+  font-size: 16px !important; /* prevents iOS auto-zoom */
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  transition: all 0.25s var(--ease-apple-out);
+}
+.lg-search-input::placeholder { color: rgba(255, 255, 255, 0.35) !important; }
+.lg-search-input:focus {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  outline: none !important;
+}
+html:not(.dark) .lg-search-input {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Spotlight dropdown (for search/command palette results) */
+.lg-spotlight-dropdown {
+  background: rgba(28, 28, 30, 0.72);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    0 20px 48px rgba(0, 0, 0, 0.2);
+}
+html:not(.dark) .lg-spotlight-dropdown {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 20px 48px rgba(0, 0, 0, 0.05);
+}

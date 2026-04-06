@@ -1,0 +1,243 @@
+/* ═══════════════════════════════════════════════════════════════
+   Liquid Glass Core — 4-layer Apple iOS 26 material
+   Usage:
+     <div class="liquid-glass [lg-macro]">
+       <div class="liquid-glass-effect" />
+       <div class="liquid-glass-tint" />
+       <div class="liquid-glass-shine" />
+       <div class="liquid-glass-content">{content}</div>
+     </div>
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Apple canonical motion curves */
+  --ease-apple-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-apple-morph: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-apple-liquid: cubic-bezier(0.3, 0, 0, 1.3);
+  --ease-apple-magnetic: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px; /* iOS squircle */
+  isolation: isolate;
+  /* Perf: skip rendering off-screen glass entirely */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+  contain: layout paint;
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 8px 24px -8px rgba(0, 0, 0, 0.4),
+    0 2px 6px -2px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.25s var(--ease-apple-out),
+              transform 0.25s var(--ease-apple-out);
+}
+
+a.liquid-glass:hover,
+.liquid-glass:hover {
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    0 12px 32px -8px rgba(0, 0, 0, 0.5),
+    0 4px 10px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* Layer 0: backdrop refraction (inner cards, NO SVG displacement) */
+.liquid-glass-effect {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(170%) brightness(1.04) contrast(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(170%) brightness(1.04) contrast(1.05);
+}
+
+/* Macros get real SVG displacement (3-5 elements per page max) */
+.lg-macro > .liquid-glass-effect {
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.06) contrast(1.06) url(#lg-refract);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.06) contrast(1.06);
+}
+
+html:not(.dark) .liquid-glass-effect {
+  backdrop-filter: blur(20px) saturate(135%) brightness(1.02);
+  -webkit-backdrop-filter: blur(20px) saturate(135%) brightness(1.02);
+}
+html:not(.dark) .lg-macro > .liquid-glass-effect {
+  backdrop-filter: blur(28px) saturate(150%) brightness(1.03) url(#lg-refract);
+  -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.03);
+}
+
+/* Layer 1: base tint — VISIBLE color so glass shows on pure black */
+.liquid-glass-tint {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(28, 28, 32, 0.72);
+}
+.lg-macro > .liquid-glass-tint {
+  background: rgba(20, 20, 24, 0.66);
+}
+html:not(.dark) .liquid-glass-tint {
+  background: rgba(255, 255, 255, 0.78);
+}
+html:not(.dark) .lg-macro > .liquid-glass-tint {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Layer 2: inset rim highlights — the "lit bezel" (1:2 ratio = convex) */
+.liquid-glass-shine {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 2px 4px -2px rgba(255, 255, 255, 0.18),
+    inset 0 -2px 4px -2px rgba(0, 0, 0, 0.25);
+}
+html:not(.dark) .liquid-glass-shine {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 0 6px 0 rgba(255, 255, 255, 0.3),
+    inset 0 2px 4px -2px rgba(255, 255, 255, 0.9),
+    inset 0 -2px 4px -2px rgba(0, 0, 0, 0.06);
+}
+.lg-macro > .liquid-glass-shine {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 8px 0 rgba(255, 255, 255, 0.05),
+    inset 0 3px 6px -3px rgba(255, 255, 255, 0.22),
+    inset 0 -3px 6px -3px rgba(0, 0, 0, 0.3);
+}
+html:not(.dark) .lg-macro > .liquid-glass-shine {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset 0 0 8px 0 rgba(255, 255, 255, 0.35),
+    inset 0 3px 6px -3px rgba(255, 255, 255, 0.95),
+    inset 0 -3px 6px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Layer 3: content sits above all material layers */
+.liquid-glass-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* Noise grain (::before) — static, soft-light blend */
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+html:not(.dark) .liquid-glass::before {
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+}
+
+/* Cursor-tracking glow (::after) — appears on hover */
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    160px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.01) 40%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+}
+.liquid-glass:hover::after { opacity: 1; }
+html:not(.dark) .liquid-glass::after {
+  background: radial-gradient(
+    160px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.04) 40%,
+    transparent 70%
+  );
+  mix-blend-mode: soft-light;
+}
+
+/* .lg-mobile-flat — strips the wrapper on mobile (keeps nested cards) */
+@media (max-width: 639px) {
+  .liquid-glass.lg-mobile-flat {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    isolation: auto !important;
+  }
+  .lg-mobile-flat > .liquid-glass-effect,
+  .lg-mobile-flat > .liquid-glass-tint,
+  .lg-mobile-flat > .liquid-glass-shine {
+    display: none !important;
+  }
+  .lg-mobile-flat::after,
+  .lg-mobile-flat::before {
+    display: none !important;
+  }
+  .lg-mobile-flat > .liquid-glass-content {
+    padding: 0 !important;
+  }
+}
+
+/* Touch-device gates — disable expensive effects */
+@media (hover: none), (pointer: coarse) {
+  .liquid-glass {
+    content-visibility: visible;
+    contain: none;
+  }
+  .liquid-glass::after,
+  .liquid-glass:hover::after {
+    display: none !important;
+  }
+  .liquid-glass-effect {
+    backdrop-filter: blur(16px) saturate(150%) brightness(1.04);
+    -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(1.04);
+  }
+  .lg-macro > .liquid-glass-effect {
+    backdrop-filter: blur(22px) saturate(170%) brightness(1.06);
+    -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(1.06);
+  }
+}
+
+/* Glass-off mode — strips every .liquid-glass container entirely */
+html.glass-off .liquid-glass {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: visible !important;
+  isolation: auto !important;
+  contain: none !important;
+  content-visibility: visible !important;
+}
+html.glass-off .liquid-glass-effect,
+html.glass-off .liquid-glass-tint,
+html.glass-off .liquid-glass-shine,
+html.glass-off .liquid-glass::before,
+html.glass-off .liquid-glass::after {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass,
+  a.liquid-glass:hover,
+  .liquid-glass:hover {
+    transition: none !important;
+  }
+}

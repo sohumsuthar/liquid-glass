@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════
+   Glass effects: sitewide cursor spotlight + scroll reveal + squash
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Sitewide cursor spotlight — GPU-positioned fixed blob */
+.lg-spotlight {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 720px;
+  height: 720px;
+  margin-left: -360px;
+  margin-top: -360px;
+  pointer-events: none;
+  z-index: -5;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02) 45%,
+    transparent 72%
+  );
+  transform: translate3d(var(--cx, 50vw), var(--cy, 50vh), 0);
+  transition: opacity 0.3s var(--ease-apple-out);
+  will-change: transform;
+}
+html.over-glass .lg-spotlight { opacity: 0.55; }
+html:not(.dark) .lg-spotlight {
+  background: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.04),
+    rgba(0, 0, 0, 0.015) 45%,
+    transparent 72%
+  );
+}
+
+/* Scroll reveal entrance animation */
+@property --lg-reveal-y {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: false;
+}
+@property --lg-reveal-scale {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: false;
+}
+
+.liquid-glass[data-reveal] {
+  --lg-reveal-y: 16px;
+  --lg-reveal-scale: 0.96;
+  opacity: 0;
+  transform-origin: center;
+  transform:
+    translateY(var(--lg-reveal-y))
+    scale(var(--lg-reveal-scale));
+  transition:
+    --lg-reveal-y 0.85s var(--ease-apple-liquid),
+    --lg-reveal-scale 0.85s var(--ease-apple-liquid),
+    opacity 0.65s var(--ease-apple-out);
+}
+.liquid-glass[data-reveal="in"] {
+  --lg-reveal-y: 0px;
+  --lg-reveal-scale: 1;
+  opacity: 1;
+}
+
+/* Scroll-velocity squash (macro only) — subtle liquid motion */
+.liquid-glass.lg-macro[data-reveal] {
+  transform:
+    translateY(calc(var(--lg-reveal-y) + var(--sv, 0) * -2px))
+    scaleX(calc(var(--lg-reveal-scale) * (1 - var(--svmag, 0) * 0.012)))
+    scaleY(calc(var(--lg-reveal-scale) * (1 + var(--svmag, 0) * 0.006)));
+}
+
+/* Touch devices skip velocity squash */
+@media (hover: none), (pointer: coarse) {
+  .lg-spotlight { display: none; }
+  .liquid-glass[data-reveal],
+  .liquid-glass[data-reveal="in"] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass[data-reveal],
+  .liquid-glass[data-reveal="in"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
