@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 
 /**
- * useLiquidGlassEffects — mounts 4 global effects for the Liquid Glass
+ * useLiquidGlassEffects - mounts 4 global effects for the Liquid Glass
  * system. Call once at your app root.
  *
  *   useLiquidGlassEffects()
@@ -187,7 +187,7 @@ export function useLiquidGlassEffects(opts = {}) {
 }
 
 /**
- * Sitewide cursor spotlight — the fixed-position glow layer.
+ * Sitewide cursor spotlight - the fixed-position glow layer.
  * Render once near the root of your app.
  */
 export function Spotlight() {

@@ -60,7 +60,7 @@ export default function KeyboardHelpOverlay() {
             NAME
           </h3>
           <p className="pl-4 text-gray-600 dark:text-gray-400">
-            sohumsuthar.com — portfolio &amp; blog of Sohum Suthar
+            sohumsuthar.com - portfolio &amp; blog of Sohum Suthar
           </p>
         </section>
 

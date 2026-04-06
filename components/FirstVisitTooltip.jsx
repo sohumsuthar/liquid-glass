@@ -14,7 +14,7 @@ export default function FirstVisitTooltip() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    // Skip on touch devices — no controls to point to
+    // Skip on touch devices - no controls to point to
     if (window.matchMedia('(hover: none)').matches) return
     try {
       if (localStorage.getItem(STORAGE_KEY) === 'seen') return

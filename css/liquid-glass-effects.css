@@ -2,7 +2,7 @@
    Glass effects: sitewide cursor spotlight + scroll reveal + squash
    ═══════════════════════════════════════════════════════════════ */
 
-/* Sitewide cursor spotlight — GPU-positioned fixed blob */
+/* Sitewide cursor spotlight - GPU-positioned fixed blob */
 .lg-spotlight {
   position: fixed;
   left: 0;
@@ -64,7 +64,7 @@ html:not(.dark) .lg-spotlight {
   opacity: 1;
 }
 
-/* Scroll-velocity squash (macro only) — subtle liquid motion */
+/* Scroll-velocity squash (macro only) - subtle liquid motion */
 .liquid-glass.lg-macro[data-reveal] {
   transform:
     translateY(calc(var(--lg-reveal-y) + var(--sv, 0) * -2px))

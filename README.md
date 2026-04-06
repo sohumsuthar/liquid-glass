@@ -51,7 +51,7 @@ Every glass surface is four absolutely-positioned layers inside a container, plu
 │  │  + url(#lg-refract) on macros (SVG physics)   │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-tint (z:1) ───────────────────┐    │
-│  │  solid base color — visible even on black     │    │
+│  │  solid base color - visible even on black     │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-shine (z:2) ──────────────────┐    │
 │  │  4 inset box-shadows (lit bezel)              │    │
@@ -105,7 +105,7 @@ No blend mode. Just a partially-transparent fill.
 
 ## Physics of Refraction
 
-Standard glassmorphism uses `backdrop-filter: blur()` which simulates **frosted glass** — light scattering uniformly. Real glass doesn't just scatter; it **bends** light based on surface curvature. This bending is refraction.
+Standard glassmorphism uses `backdrop-filter: blur()` which simulates **frosted glass** - light scattering uniformly. Real glass doesn't just scatter; it **bends** light based on surface curvature. This bending is refraction.
 
 ### Snell's Law
 
@@ -117,7 +117,7 @@ For air ($n_1 = 1.0$) into glass ($n_2 = 1.5$):
 
 $$\sin(\theta_2) = \frac{\sin(\theta_1)}{1.5}$$
 
-The refracted ray bends **toward** the surface normal when entering a denser medium, then bends **away** when exiting. For thin glass viewed head-on, this produces a lateral displacement of the background — content behind the glass edge appears shifted inward.
+The refracted ray bends **toward** the surface normal when entering a denser medium, then bends **away** when exiting. For thin glass viewed head-on, this produces a lateral displacement of the background - content behind the glass edge appears shifted inward.
 
 ### Surface Function
 
@@ -185,7 +185,7 @@ The `scale` attribute on `<feDisplacementMap>` multiplies the decoded displaceme
 - $R = 0$ displaces by $-\text{scale}$ pixels
 - $R = 128$ is neutral
 
-With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.06` produces a maximum displacement of 6% of the element width — roughly 42 pixels on a 700px macro panel.
+With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.06` produces a maximum displacement of 6% of the element width - roughly 42 pixels on a 700px macro panel.
 
 ### Generating the Map
 
@@ -255,7 +255,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 
 | Class | Purpose |
 |-------|---------|
-| `.liquid-glass` | Container — applies all 4 layers when children are present |
+| `.liquid-glass` | Container - applies all 4 layers when children are present |
 | `.lg-macro` | Stronger blur + SVG refraction (use on 3-5 outer wrappers per page) |
 | `.lg-mobile-flat` | Strips the container on screens ≤639px |
 | `.lg-navbar` | Dynamic Island pill with sticky positioning |
@@ -285,10 +285,10 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 |-----------|-------|-------------|
 | `<LiquidGlass>` | `macro`, `mobileFlat`, `className`, `contentClassName` | 4-layer container |
 | `<LiquidGlassFilter>` | `displacementMap` (base64 data URL) | Inline SVG refraction filter |
-| `<ParticleBackground>` | — | Canvas particle network + toggle button |
-| `<GlassToggle>` | — | Strips glass containers via `html.glass-off` |
-| `<FirstVisitTooltip>` | — | One-time "adjust UI here" hint |
-| `<KeyboardHelpOverlay>` | — | Press `?` for man-page shortcuts |
+| `<ParticleBackground>` | - | Canvas particle network + toggle button |
+| `<GlassToggle>` | - | Strips glass containers via `html.glass-off` |
+| `<FirstVisitTooltip>` | - | One-time "adjust UI here" hint |
+| `<KeyboardHelpOverlay>` | - | Press `?` for man-page shortcuts |
 
 ### Hook
 
@@ -316,7 +316,7 @@ From Apple.com DOM inspection and WWDC 2025 reverse engineering:
 | Saturate | 170% | 180% |
 | Brightness | 1.04 | 1.06 |
 | Contrast | 1.05 | 1.06 |
-| SVG displacement | — | scale 0.06 |
+| SVG displacement | - | scale 0.06 |
 | Dark tint | `rgba(28,28,32,0.72)` | `rgba(20,20,24,0.66)` |
 | Light tint | `rgba(255,255,255,0.78)` | `rgba(255,255,255,0.70)` |
 | Border-radius | 22px | 22px |

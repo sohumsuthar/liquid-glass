@@ -7,7 +7,7 @@ const STORAGE_KEY = 'lg-glass-enabled'
 /**
  * Toggles the liquid glass effects (backdrop-filter, tint, shine, grain)
  * across the site. When disabled, glass elements fall back to solid
- * dark cards with the same shape + shadow — much cheaper to render.
+ * dark cards with the same shape + shadow - much cheaper to render.
  * Desktop-only (mobile has its own perf optimizations already).
  */
 export default function GlassToggle() {

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Navbar, buttons, links, tags, search input — Apple chrome UI
+   Navbar, buttons, links, tags, search input - Apple chrome UI
    ═══════════════════════════════════════════════════════════════ */
 
 /* Dynamic Island-style navbar pill */
@@ -29,7 +29,7 @@ html:not(.dark) .lg-navbar {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-/* Sticky wrapper — navbar follows user through whole page */
+/* Sticky wrapper - navbar follows user through whole page */
 .lg-navbar-sticky {
   position: sticky;
   top: 12px;

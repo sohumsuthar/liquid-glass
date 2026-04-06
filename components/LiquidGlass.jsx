@@ -1,5 +1,5 @@
 /**
- * LiquidGlass — the 4-layer container.
+ * LiquidGlass - the 4-layer container.
  *
  *   <LiquidGlass macro>
  *     <h2>Hello</h2>

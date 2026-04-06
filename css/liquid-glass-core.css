@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Liquid Glass Core — 4-layer Apple iOS 26 material
+   Liquid Glass Core - 4-layer Apple iOS 26 material
    Usage:
      <div class="liquid-glass [lg-macro]">
        <div class="liquid-glass-effect" />
@@ -67,7 +67,7 @@ html:not(.dark) .lg-macro > .liquid-glass-effect {
   -webkit-backdrop-filter: blur(28px) saturate(150%) brightness(1.03);
 }
 
-/* Layer 1: base tint — VISIBLE color so glass shows on pure black */
+/* Layer 1: base tint - VISIBLE color so glass shows on pure black */
 .liquid-glass-tint {
   position: absolute;
   z-index: 1;
@@ -85,7 +85,7 @@ html:not(.dark) .lg-macro > .liquid-glass-tint {
   background: rgba(255, 255, 255, 0.7);
 }
 
-/* Layer 2: inset rim highlights — the "lit bezel" (1:2 ratio = convex) */
+/* Layer 2: inset rim highlights - the "lit bezel" (1:2 ratio = convex) */
 .liquid-glass-shine {
   position: absolute;
   z-index: 2;
@@ -126,7 +126,7 @@ html:not(.dark) .lg-macro > .liquid-glass-shine {
   z-index: 3;
 }
 
-/* Noise grain (::before) — static, soft-light blend */
+/* Noise grain (::before) - static, soft-light blend */
 .liquid-glass::before {
   content: '';
   position: absolute;
@@ -144,7 +144,7 @@ html:not(.dark) .liquid-glass::before {
   mix-blend-mode: multiply;
 }
 
-/* Cursor-tracking glow (::after) — appears on hover */
+/* Cursor-tracking glow (::after) - appears on hover */
 .liquid-glass::after {
   content: '';
   position: absolute;
@@ -173,7 +173,7 @@ html:not(.dark) .liquid-glass::after {
   mix-blend-mode: soft-light;
 }
 
-/* .lg-mobile-flat — strips the wrapper on mobile (keeps nested cards) */
+/* .lg-mobile-flat - strips the wrapper on mobile (keeps nested cards) */
 @media (max-width: 639px) {
   .liquid-glass.lg-mobile-flat {
     background: transparent !important;
@@ -196,7 +196,7 @@ html:not(.dark) .liquid-glass::after {
   }
 }
 
-/* Touch-device gates — disable expensive effects */
+/* Touch-device gates - disable expensive effects */
 @media (hover: none), (pointer: coarse) {
   .liquid-glass {
     content-visibility: visible;
@@ -216,7 +216,7 @@ html:not(.dark) .liquid-glass::after {
   }
 }
 
-/* Glass-off mode — strips every .liquid-glass container entirely */
+/* Glass-off mode - strips every .liquid-glass container entirely */
 html.glass-off .liquid-glass {
   background: transparent !important;
   box-shadow: none !important;

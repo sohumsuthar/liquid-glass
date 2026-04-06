@@ -2,7 +2,7 @@
    Utilities: monospace, cursor blink, body typography
    ═══════════════════════════════════════════════════════════════ */
 
-/* Monospace — SF Mono on Apple, JetBrains/Fira fallback */
+/* Monospace - SF Mono on Apple, JetBrains/Fira fallback */
 .lg-mono {
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
   font-feature-settings: 'calt' 0, 'liga' 0;
@@ -32,7 +32,7 @@
   .lg-logo-spin { animation-duration: 8s; }
 }
 
-/* Body typography — Apple system stack + antialiasing */
+/* Body typography - Apple system stack + antialiasing */
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

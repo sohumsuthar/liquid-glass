@@ -12,7 +12,7 @@ const STORAGE_KEY = 'lg-particles-enabled'
  * - User can toggle via the bottom-left button; preference persists
  *
  * Perf notes:
- * - Lines are batched by alpha bucket (6 buckets) — one stroke() per bucket
+ * - Lines are batched by alpha bucket (6 buckets) - one stroke() per bucket
  *   instead of one per pair, ~40% draw-call reduction.
  * - All circle fills share one beginPath / arc / fill cycle.
  * - Tab hidden → rAF cancelled.
@@ -71,7 +71,7 @@ export default function ParticleBackground() {
     let width = 0
     let height = 0
     let running = true
-    // Mouse state — -1 means "off-canvas / not active"
+    // Mouse state - -1 means "off-canvas / not active"
     let mouseX = -1
     let mouseY = -1
 
@@ -218,7 +218,7 @@ export default function ParticleBackground() {
         }
       }
 
-      // All circles in a single path — one fill call
+      // All circles in a single path - one fill call
       ctx.fillStyle = 'rgba(255,255,255,0.5)'
       ctx.beginPath()
       for (let i = 0; i < n; i++) {
@@ -243,7 +243,7 @@ export default function ParticleBackground() {
 
     // Frame-skip wrapper: redraw only every 2nd frame (≈30fps) to let
     // backdrop-filter cache one frame. Halves the recomputation cost
-    // for all glass elements above the canvas — particles still move
+    // for all glass elements above the canvas - particles still move
     // at the same perceived speed (velocity doubles per update).
     let skipFrame = false
     const drawThrottled = () => {
