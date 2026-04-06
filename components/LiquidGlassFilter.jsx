@@ -56,12 +56,12 @@ export default function LiquidGlassFilter({ displacementMap }) {
         <feDisplacementMap
           in="SourceGraphic"
           in2="dispMap"
-          scale="0.06"
+          scale="0.45"
           xChannelSelector="R"
           yChannelSelector="G"
         />
       </filter>
-      {/* Smaller scale for inner cards (if you ever chain url() on them) */}
+      {/* Same scale for inner cards (unified config across all surfaces) */}
       <filter
         id="lg-refract-sm"
         x="0%"
@@ -85,7 +85,7 @@ export default function LiquidGlassFilter({ displacementMap }) {
         <feDisplacementMap
           in="SourceGraphic"
           in2="dispMap"
-          scale="0.035"
+          scale="0.45"
           xChannelSelector="R"
           yChannelSelector="G"
         />

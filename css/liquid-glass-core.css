@@ -42,24 +42,24 @@ a.liquid-glass:hover,
     0 4px 10px -2px rgba(0, 0, 0, 0.35);
 }
 
-/* Layer 0: backdrop refraction (inner cards, NO SVG displacement) */
+/* Layer 0: backdrop refraction (all surfaces get SVG displacement) */
 .liquid-glass-effect {
   position: absolute;
   z-index: 0;
   inset: 0;
   overflow: hidden;
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract-sm);
   -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 
-/* Macros get real SVG displacement (3-5 elements per page max) */
+/* Macros use the larger-scale displacement filter */
 .lg-macro > .liquid-glass-effect {
   backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
   -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 
 html:not(.dark) .liquid-glass-effect {
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract-sm);
   -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
 }
 html:not(.dark) .lg-macro > .liquid-glass-effect {

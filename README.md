@@ -48,7 +48,7 @@ Every glass surface is four absolutely-positioned layers inside a container, plu
 │                                                       │
 │  ┌─ .liquid-glass-effect (z:0) ─────────────────┐    │
 │  │  backdrop-filter: blur saturate brightness    │    │
-│  │  + url(#lg-refract) on macros (SVG physics)   │    │
+│  │  + url(#lg-refract) SVG displacement on all    │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-tint (z:1) ───────────────────┐    │
 │  │  solid base color - visible even on black     │    │
@@ -185,7 +185,7 @@ The `scale` attribute on `<feDisplacementMap>` multiplies the decoded displaceme
 - $R = 0$ displaces by $-\text{scale}$ pixels
 - $R = 128$ is neutral
 
-With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.06` produces a maximum displacement of 6% of the element width - roughly 42 pixels on a 700px macro panel.
+With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.45` produces a maximum displacement of 45% of the element width. Both `#lg-refract` (macros) and `#lg-refract-sm` (inner cards) use the same 0.45 scale.
 
 ### Generating the Map
 
@@ -215,7 +215,7 @@ The displacement PNG must be **base64-inlined** in the SVG. `feImage` silently f
 The CSS chains it with `backdrop-filter`:
 
 ```css
-backdrop-filter: blur(2px) saturate(180%) url(#lg-refract);
+backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
 ```
 
 **Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter` and fall back to the blur-only `-webkit-backdrop-filter`. Graceful degradation, not feature parity.
@@ -231,7 +231,7 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | `content-visibility: auto` | Off-screen glass skips rendering | ~80% with 20+ cards |
 | `contain: layout paint` | Isolates repaint scope per card | ~20% paint reduction |
 | `isolation: isolate` | Reduces backdrop sample region | 30-40% filter cost |
-| SVG displacement on macros only | 3-5 filter passes instead of 20+ | ~75% displacement cost |
+| SVG displacement on all surfaces | Unified config, `#lg-refract` macros + `#lg-refract-sm` inner cards | Full refraction everywhere |
 | Blur capped at 2px | Clear glass - minimal blur cost | ~90% vs 28px |
 | Particle canvas at 30fps | Halves backdrop-filter cache invalidation | ~50% composite cost |
 | Touch gates `(hover: none)` | Disables spotlight, cursor, reveal, squash | 100% on mobile |
@@ -256,7 +256,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | Class | Purpose |
 |-------|---------|
 | `.liquid-glass` | Container - applies all 4 layers when children are present |
-| `.lg-macro` | Stronger blur + SVG refraction (use on 3-5 outer wrappers per page) |
+| `.lg-macro` | Uses `#lg-refract` (larger-scale displacement); inner cards use `#lg-refract-sm` |
 | `.lg-mobile-flat` | Strips the container on screens ≤639px |
 | `.lg-navbar` | Dynamic Island pill with sticky positioning |
 | `.lg-nav-btn` | Circular icon button |
@@ -310,16 +310,17 @@ useLiquidGlassEffects({
 
 From Apple.com DOM inspection and WWDC 2025 reverse engineering:
 
-| Property | Inner cards | Macro wrappers |
-|----------|-------------|----------------|
-| Blur radius | 2px | 2px |
-| Saturate | 180% | 180% |
-| Brightness | 1.06 | 1.06 |
-| Contrast | 1.04 | 1.04 |
-| SVG displacement | - | scale 0.06 |
-| Dark tint | `rgba(28,28,32,0.30)` | `rgba(20,20,24,0.30)` |
-| Light tint | `rgba(255,255,255,0.40)` | `rgba(255,255,255,0.40)` |
-| Border-radius | 22px | 22px |
+| Property | All surfaces (unified) |
+|----------|------------------------|
+| Blur radius | 2px |
+| Saturate | 180% |
+| Brightness | 1.06 |
+| Contrast | 1.04 |
+| SVG displacement | scale 0.45 (`#lg-refract` macros, `#lg-refract-sm` inner cards) |
+| Dark tint | `rgba(28,28,32,0.30)` |
+| Light tint | `rgba(255,255,255,0.40)` |
+| Background opacity | 0.12-0.15 (nearly transparent) |
+| Border-radius | 22px |
 
 Apple motion curves:
 

@@ -7,7 +7,7 @@
   position: relative;
   border-radius: 9999px;
   padding: 5px 5px 5px 10px;
-  background: rgba(28, 28, 30, 0.6);
+  background: rgba(28, 28, 30, 0.14);
   border: 0.5px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
   -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
@@ -18,7 +18,7 @@
   animation: lg-navbar-enter 0.5s var(--ease-apple-out);
 }
 html:not(.dark) .lg-navbar {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.15);
   border-color: rgba(0, 0, 0, 0.06);
   box-shadow:
     0 0 0 0.5px rgba(0, 0, 0, 0.04),
@@ -110,7 +110,7 @@ html:not(.dark) .lg-nav-link.is-active {
 .lg-ai-gradient {
   position: relative;
   color: rgba(255, 255, 255, 1);
-  background: rgba(10, 10, 14, 0.6);
+  background: rgba(10, 10, 14, 0.14);
   border: none;
   isolation: isolate;
   overflow: hidden;
@@ -167,7 +167,7 @@ html:not(.dark) .lg-tag:hover {
 
 /* Spotlight-style search input */
 .lg-search-input {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   border: 0.5px solid rgba(255, 255, 255, 0.08) !important;
   font-size: 16px !important; /* prevents iOS auto-zoom */
   backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) !important;
@@ -188,14 +188,14 @@ html:not(.dark) .lg-tag:hover {
   outline: none !important;
 }
 html:not(.dark) .lg-search-input {
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
   border-color: rgba(0, 0, 0, 0.06) !important;
   color: rgba(0, 0, 0, 0.9) !important;
 }
 
 /* Spotlight dropdown (for search/command palette results) */
 .lg-spotlight-dropdown {
-  background: rgba(28, 28, 30, 0.72);
+  background: rgba(28, 28, 30, 0.14);
   border: 0.5px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
   -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
@@ -205,7 +205,7 @@ html:not(.dark) .lg-search-input {
     0 20px 48px rgba(0, 0, 0, 0.2);
 }
 html:not(.dark) .lg-spotlight-dropdown {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.15);
   border-color: rgba(0, 0, 0, 0.06);
   box-shadow:
     0 0 0 0.5px rgba(0, 0, 0, 0.04),
