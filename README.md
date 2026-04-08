@@ -95,7 +95,7 @@ box-shadow:
   inset 0 -2px 4px -2px rgba(0, 0, 0, 0.25);     /* bottom shadow */
 ```
 
-The top-to-bottom opacity ratio is $0.18 : 0.25 \approx 1 : 1.4$. This asymmetry is what makes the glass read as **convex** rather than flat. Invert the ratio for concave; equal values for flat.
+The top-to-bottom opacity ratio is `0.18 : 0.25 ≈ 1 : 1.4`. This asymmetry is what makes the glass read as **convex** rather than flat. Invert the ratio for concave; equal values for flat.
 
 ### The base tint
 
@@ -118,27 +118,35 @@ Standard glassmorphism uses `backdrop-filter: blur()` which simulates **frosted 
 
 ### Snell's Law
 
-When light passes from a medium with refractive index $n_1$ into a medium with index $n_2$, the relationship between the incident angle $\theta_1$ and the refracted angle $\theta_2$ is:
+When light passes from a medium with refractive index `n₁` into a medium with index `n₂`, the relationship between the incident angle `θ₁` and the refracted angle `θ₂` is:
 
-$$n_1 \sin(\theta_1) = n_2 \sin(\theta_2)$$
+```
+n₁ · sin(θ₁) = n₂ · sin(θ₂)
+```
 
-For air ($n_1 = 1.0$) into glass ($n_2 = 1.5$):
+For air (`n₁ = 1.0`) into glass (`n₂ = 1.5`):
 
-$$\sin(\theta_2) = \frac{\sin(\theta_1)}{1.5}$$
+```
+sin(θ₂) = sin(θ₁) / 1.5
+```
 
 The refracted ray bends **toward** the surface normal when entering a denser medium, then bends **away** when exiting. For thin glass viewed head-on, this produces a lateral displacement of the background - content behind the glass edge appears shifted inward.
 
 ### Surface Function
 
-The amount of bending depends on the **slope** of the glass surface at each point. We define the glass cross-section as a height function $f(x)$ where $x \in [0, 1]$ is the normalized distance from the outer border ($x = 0$) to the inner flat surface ($x = 1$).
+The amount of bending depends on the **slope** of the glass surface at each point. We define the glass cross-section as a height function `f(x)` where `x ∈ [0, 1]` is the normalized distance from the outer border (`x = 0`) to the inner flat surface (`x = 1`).
 
 The surface uses the **convex squircle** (superellipse) profile:
 
-$$f(x) = \sqrt[4]{1 - (1-x)^4}$$
+```
+f(x) = ⁴√(1 - (1-x)⁴)
+```
 
 This is the fourth root of a quartic complement. Compare with a simple circular arc:
 
-$$f_{\text{circle}}(x) = \sqrt{1 - (1-x)^2}$$
+```
+f_circle(x) = √(1 - (1-x)²)
+```
 
 The squircle's advantage: it has a **softer transition** from flat interior to curved bezel. The circular arc creates a harsh inflection point where the curve meets the flat zone, producing visible refraction artifacts when stretched into rectangles. The squircle keeps gradients smooth.
 
@@ -146,15 +154,21 @@ The squircle's advantage: it has a **softer transition** from flat interior to c
 
 At each point in the bezel zone, the surface slope determines how much a light ray is displaced:
 
-$$\text{slope}(x) = f'(x) = \frac{d}{dx} \sqrt[4]{1 - (1-x)^4}$$
+```
+slope(x) = f'(x) = d/dx ⁴√(1 - (1-x)⁴)
+```
 
 Numerically approximated:
 
-$$f'(x) \approx \frac{f(x + \delta) - f(x - \delta)}{2\delta}, \quad \delta = 0.001$$
+```
+f'(x) ≈ (f(x + δ) - f(x - δ)) / 2δ,  δ = 0.001
+```
 
 The displacement magnitude is derived from a simplified single-refraction model:
 
-$$d(x) = \frac{f'(x)}{1 + f'(x)^2}$$
+```
+d(x) = f'(x) / (1 + f'(x)²)
+```
 
 This has the desired property: maximum at the border (where slope is steepest), decaying to zero at the flat interior.
 
@@ -172,27 +186,33 @@ for (let i = 0; i <= 127; i++) {
 
 The displacement map needs both **magnitude** and **direction** at every pixel. Direction is determined by the **gradient of the signed distance field** (SDF) of the rounded rectangle:
 
-$$\vec{n}(p) = \nabla \, \text{SDF}(p)$$
+```
+n(p) = ∇ SDF(p)
+```
 
 This gradient always points **orthogonal to the nearest border**, exactly the direction a refracted ray would shift. For convex glass, the displacement is **inward** (toward the center):
 
-$$\vec{d}(p) = -\vec{n}(p) \cdot \frac{d(\lVert p - \text{border} \rVert / w)}{d_{\max}}$$
+```
+d(p) = -n(p) · d(‖p - border‖ / w) / d_max
+```
 
-where $w$ is the bezel width and $d_{\max}$ normalizes the output to $[-1, 1]$.
+where `w` is the bezel width and `d_max` normalizes the output to `[-1, 1]`.
 
 ### Encoding as RGB
 
 SVG's `<feDisplacementMap>` reads displacement from an image. Each pixel's red channel encodes the X displacement, green encodes Y. The neutral value (no displacement) is 128:
 
-$$R = 128 + d_x \cdot 127$$
-$$G = 128 + d_y \cdot 127$$
-$$B = 128, \quad A = 255$$
+```
+R = 128 + dx · 127
+G = 128 + dy · 127
+B = 128,  A = 255
+```
 
 The `scale` attribute on `<feDisplacementMap>` multiplies the decoded displacement:
 
-- A pixel with $R = 255$ displaces by $+\text{scale}$ pixels in X
-- $R = 0$ displaces by $-\text{scale}$ pixels
-- $R = 128$ is neutral
+- A pixel with `R = 255` displaces by `+scale` pixels in X
+- `R = 0` displaces by `-scale` pixels
+- `R = 128` is neutral
 
 With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.45` produces a maximum displacement of 45% of the element width. Both `#lg-refract` (macros) and `#lg-refract-sm` (inner cards) use the same 0.45 scale.
 
