@@ -1,12 +1,52 @@
 {
-  "name": "liquid-glass",
+  "name": "liquid-glass-ui",
   "version": "1.0.0",
-  "private": true,
   "description": "Physically accurate Liquid Glass design system — 4-layer architecture, physics-based SVG refraction, performance gates, control dock.",
+  "main": "components/index.js",
+  "module": "components/index.js",
+  "exports": {
+    ".": "./components/index.js",
+    "./css/*": "./css/*",
+    "./hooks": "./hooks/useLiquidGlassEffects.js",
+    "./components/*": "./components/*"
+  },
+  "files": [
+    "css",
+    "components",
+    "hooks",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "generate-displacement-map": "node scripts/generate-displacement-map.mjs"
   },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
   "devDependencies": {
     "sharp": "^0.34.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sohumsuthar/liquid-glass"
+  },
+  "homepage": "https://www.sohumsuthar.com/posts/ui-overhaul-physics",
+  "author": "Sohum Suthar",
+  "license": "MIT",
+  "keywords": [
+    "glass",
+    "glassmorphism",
+    "liquid-glass",
+    "ui",
+    "react",
+    "css",
+    "design-system",
+    "physics",
+    "refraction",
+    "snell-law",
+    "backdrop-filter",
+    "frosted-glass"
+  ]
 }
