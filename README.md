@@ -4,6 +4,8 @@ A production-grade implementation of Apple's iOS 26 Liquid Glass material for th
 
 4-layer compositing architecture, physics-based SVG refraction using Snell's law and the convex squircle surface profile, performance-gated to run 20+ concurrent glass elements at 120fps.
 
+**Blog post:** [the physics behind my site's new ui](https://www.sohumsuthar.com/posts/ui-overhaul-physics)
+
 ---
 
 ## Quick Start
