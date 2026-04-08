@@ -11,11 +11,28 @@ A physically accurate glass material for the web.
 ## Quick Start
 
 ```bash
-# Copy the CSS into your project
-cp css/liquid-glass-core.css   your-project/styles/
-cp css/liquid-glass-nav.css    your-project/styles/  # optional
-cp css/liquid-glass-effects.css your-project/styles/ # optional
+npm install @sohumsuthar/liquid-glass
 ```
+
+```jsx
+// Import the core CSS (required)
+import '@sohumsuthar/liquid-glass/css/liquid-glass-core.css'
+
+// Optional CSS modules
+import '@sohumsuthar/liquid-glass/css/liquid-glass-nav.css'
+import '@sohumsuthar/liquid-glass/css/liquid-glass-effects.css'
+import '@sohumsuthar/liquid-glass/css/liquid-glass-dock.css'
+import '@sohumsuthar/liquid-glass/css/liquid-glass-utils.css'
+
+// React component
+import { LiquidGlass } from '@sohumsuthar/liquid-glass'
+
+<LiquidGlass macro contentStyle={{ padding: '24px' }}>
+  <h2>Hello</h2>
+</LiquidGlass>
+```
+
+Or use the HTML classes directly:
 
 ```html
 <div class="liquid-glass">
@@ -26,16 +43,6 @@ cp css/liquid-glass-effects.css your-project/styles/ # optional
     Your content here.
   </div>
 </div>
-```
-
-React:
-
-```jsx
-import { LiquidGlass } from './components'
-
-<LiquidGlass macro contentStyle={{ padding: '24px' }}>
-  <h2>Hello</h2>
-</LiquidGlass>
 ```
 
 ---
@@ -295,7 +302,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 ### Hook
 
 ```jsx
-import { useLiquidGlassEffects, Spotlight } from './hooks/useLiquidGlassEffects'
+import { useLiquidGlassEffects, Spotlight } from '@sohumsuthar/liquid-glass/hooks'
 
 useLiquidGlassEffects({
   cursor: true,     // --mx/--my on closest glass

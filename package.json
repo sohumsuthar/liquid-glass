@@ -1,5 +1,5 @@
 {
-  "name": "liquid-glass-ui",
+  "name": "@sohumsuthar/liquid-glass",
   "version": "1.0.0",
   "description": "Physically accurate Liquid Glass design system — 4-layer architecture, physics-based SVG refraction, performance gates, control dock.",
   "main": "components/index.js",
