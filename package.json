@@ -2,7 +2,7 @@
   "name": "liquid-glass",
   "version": "1.0.0",
   "private": true,
-  "description": "Apple iOS 26 Liquid Glass design system — 4-layer architecture, physics-based SVG refraction, performance gates, control dock.",
+  "description": "Physically accurate Liquid Glass design system — 4-layer architecture, physics-based SVG refraction, performance gates, control dock.",
   "scripts": {
     "generate-displacement-map": "node scripts/generate-displacement-map.mjs"
   },

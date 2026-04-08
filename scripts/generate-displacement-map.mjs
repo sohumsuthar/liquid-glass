@@ -1,5 +1,5 @@
 // Generates a physics-based displacement map PNG for Liquid Glass refraction.
-// Based on Apple iOS 26 approach: convex squircle surface (y = ⁴√(1-(1-x)⁴))
+// Convex squircle surface (y = ⁴√(1-(1-x)⁴))
 // with bezel-zone displacement only.
 //
 // Output: public/static/images/lg-displacement.png

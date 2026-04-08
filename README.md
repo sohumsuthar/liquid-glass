@@ -1,6 +1,6 @@
 # Liquid Glass
 
-A production-grade implementation of Apple's iOS 26 Liquid Glass material for the web.
+A physically accurate glass material for the web.
 
 4-layer compositing architecture, physics-based SVG refraction using Snell's law and the convex squircle surface profile, performance-gated to run 20+ concurrent glass elements at 120fps.
 
@@ -125,7 +125,7 @@ The refracted ray bends **toward** the surface normal when entering a denser med
 
 The amount of bending depends on the **slope** of the glass surface at each point. We define the glass cross-section as a height function $f(x)$ where $x \in [0, 1]$ is the normalized distance from the outer border ($x = 0$) to the inner flat surface ($x = 1$).
 
-Apple's iOS 26 uses the **convex squircle** (superellipse) profile:
+The surface uses the **convex squircle** (superellipse) profile:
 
 $$f(x) = \sqrt[4]{1 - (1-x)^4}$$
 
