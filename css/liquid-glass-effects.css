@@ -33,43 +33,43 @@ html:not(.dark) .lg-spotlight {
   );
 }
 
-/* Scroll reveal entrance animation */
-@property --lg-reveal-y {
-  syntax: '<length>';
-  initial-value: 0px;
-  inherits: false;
-}
-@property --lg-reveal-scale {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: false;
-}
-
+/* Scroll reveal entrance — compositor-driven transform + opacity transition.
+   (v1.1.0) Replaces the old @property --lg-reveal-y / --lg-reveal-scale
+   registered-custom-property interpolation, which recomputed the composed
+   transform on the main thread every frame and silently no-op'd in Firefox
+   <128 (no @property support). Same 16px / 0.96 / eases → a pixel-identical
+   pop, now run off the main thread by the compositor. The revealed ("in")
+   state keeps an explicit identity transform (not `none`) so the element's
+   compositing layer matches exactly. */
 .liquid-glass[data-reveal] {
-  --lg-reveal-y: 16px;
-  --lg-reveal-scale: 0.96;
   opacity: 0;
   transform-origin: center;
-  transform:
-    translateY(var(--lg-reveal-y))
-    scale(var(--lg-reveal-scale));
+  transform: translateY(16px) scale(0.96);
+  backface-visibility: hidden;
   transition:
-    --lg-reveal-y 0.85s var(--ease-apple-liquid),
-    --lg-reveal-scale 0.85s var(--ease-apple-liquid),
-    opacity 0.65s var(--ease-apple-out);
+    transform 0.85s cubic-bezier(0.22, 1.12, 0.4, 1),
+    opacity 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .liquid-glass[data-reveal="in"] {
-  --lg-reveal-y: 0px;
-  --lg-reveal-scale: 1;
+  transform: translateY(0) scale(1);
   opacity: 1;
 }
 
-/* Scroll-velocity squash (macro only) - subtle liquid motion */
-.liquid-glass.lg-macro[data-reveal] {
-  transform:
-    translateY(calc(var(--lg-reveal-y) + var(--sv, 0) * -2px))
-    scaleX(calc(var(--lg-reveal-scale) * (1 - var(--svmag, 0) * 0.012)))
-    scaleY(calc(var(--lg-reveal-scale) * (1 + var(--svmag, 0) * 0.006)));
+/* Scroll-velocity squash (macro only) - subtle liquid motion. Default on.
+   Lives on the individual `translate`/`scale` properties (NOT `transform`) so
+   it composes WITH the reveal's `transform` transition but is timed completely
+   independently: the reveal eases over 0.85s on the compositor, while these
+   have no transition and so track --sv/--svmag instantly, per frame, exactly
+   like v1.0.1. No reveal-state dependency is needed — at rest --sv/--svmag are
+   0 → `translate: 0 0; scale: 1 1` (identity) → inert, composing to just the
+   reveal transform. To turn the squash off, pass `scroll:false` to
+   useLiquidGlassEffects: --sv/--svmag go unset → var(...,0) fallbacks →
+   identity, no CSS change required.
+   (Individual translate/scale: Chrome 104+ / Firefox 72+ / Safari 14.1+;
+   older engines just no-op the squash and the reveal still works.) */
+.liquid-glass.lg-macro {
+  translate: 0 calc(var(--sv, 0) * -2px);
+  scale: calc(1 - var(--svmag, 0) * 0.012) calc(1 + var(--svmag, 0) * 0.006);
 }
 
 /* Touch devices skip velocity squash */
@@ -81,6 +81,12 @@ html:not(.dark) .lg-spotlight {
     transform: none !important;
     transition: none !important;
   }
+  /* transform:none above does NOT affect the individual translate/scale
+     properties — neutralize the macro velocity squash explicitly. */
+  .liquid-glass.lg-macro {
+    translate: none !important;
+    scale: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -89,5 +95,10 @@ html:not(.dark) .lg-spotlight {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+  /* Disable the individual-property velocity squash under reduced motion too. */
+  .liquid-glass.lg-macro {
+    translate: none;
+    scale: none;
   }
 }

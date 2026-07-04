@@ -47,6 +47,18 @@ Or use the HTML classes directly:
 
 ---
 
+## What's new in 1.1.0
+
+Additive and non-breaking — drop-in upgrade from 1.0.x with **no visual change by default**. Every existing capability (macros, `#lg-refract`/`#lg-refract-sm`, `<LiquidGlassFilter>`, the scroll-velocity squash) still ships. New this release:
+
+- **`<FPSGuard>`** — an adaptive perf guard. One `requestAnimationFrame` samples frame cadence over a fixed ring buffer (O(1), zero per-frame allocation); if a rolling average stays below 24fps for ~4s on a struggling device, it gracefully strips glass + particles (`html.glass-off` + `html.particles-off`) and shows a dismissible notice. Never writes user-preference keys, so it can't permanently disable glass; re-tests every 7 days. Pairs with `<GlassToggle>`.
+- **Compositor scroll reveal** — the entrance animation is now a direct `transform`+`opacity` transition instead of `@property` registered-custom-property interpolation. Same 16px / 0.96 / eases → a pixel-identical pop, but it runs off the main thread and now also animates in Firefox (which didn't register the old `@property` form).
+- **Reveal rescue net** — `useLiquidGlassEffects`'s `reveal` effect now force-reveals anything left stuck when the `IntersectionObserver` is starved (throttled/backgrounded tabs, bfcache restores, headless/CDP renderers), so content can never end up permanently invisible.
+- **Faster particles** — `<ParticleBackground>` internals rewritten to Structure-of-Arrays typed arrays with pre-computed style LUTs, batched grab lines, and a rAF-debounced resize. Same pixels, strictly less work.
+- **`.lg-blur-only`** — opt-in perf lever. Set `html.lg-blur-only` (global) or add `.lg-blur-only` to an individual `.liquid-glass` to drop inner-card SVG refraction and run blur-only for lighter scroll cost. Default is unchanged (inner cards keep `#lg-refract-sm`); `.lg-macro` surfaces keep `#lg-refract` either way.
+
+---
+
 ## Architecture
 
 Every glass surface is four absolutely-positioned layers inside a container, plus two pseudo-elements on the container itself:
@@ -264,6 +276,8 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | Blur capped at 2px | Clear glass - minimal blur cost | ~90% vs 28px |
 | Particle canvas at 30fps | Halves backdrop-filter cache invalidation | ~50% composite cost |
 | Touch gates `(hover: none)` | Disables spotlight, cursor, reveal, squash | 100% on mobile |
+| `.lg-blur-only` (opt-in) | Drops inner-card SVG displacement (blur-only) | Lighter scroll recalc; off by default |
+| `<FPSGuard>` (opt-in) | Auto-strips glass on sustained-low-fps devices | Graceful degradation |
 
 ### Touch Device Behavior
 
@@ -287,6 +301,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | `.liquid-glass` | Container - applies all 4 layers when children are present |
 | `.lg-macro` | Uses `#lg-refract` (larger-scale displacement); inner cards use `#lg-refract-sm` |
 | `.lg-mobile-flat` | Strips the container on screens ≤639px |
+| `.lg-blur-only` | Opt-in perf lever — drops inner-card SVG refraction (blur-only). Put on a `.liquid-glass`, or on `<html>` to apply globally. `.lg-macro` keeps its displacement. |
 | `.lg-navbar` | Dynamic Island pill with sticky positioning |
 | `.lg-nav-btn` | Circular icon button |
 | `.lg-nav-link` | Text pill nav link (+ `.is-active`) |
@@ -303,8 +318,9 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | Class on `<html>` | Set by | Effect |
 |---|---|---|
 | `dark` | Theme toggle | Switches all glass to dark mode values |
-| `glass-off` | `GlassToggle` | Strips all `.liquid-glass` containers |
-| `particles-off` | `ParticleBackground` | Marks particle canvas disabled |
+| `glass-off` | `GlassToggle` / `FPSGuard` | Strips all `.liquid-glass` containers |
+| `particles-off` | `ParticleBackground` / `FPSGuard` | Marks particle canvas disabled |
+| `lg-blur-only` | You (opt-in) | Drops inner-card SVG refraction site-wide (blur-only) |
 | `over-glass` | Cursor hook | Brightens sitewide spotlight |
 | `scrolled` | Scroll hook | Shrinks sticky navbar |
 
@@ -315,6 +331,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | `<LiquidGlass>` | `macro`, `mobileFlat`, `className`, `contentClassName` | 4-layer container |
 | `<LiquidGlassFilter>` | `displacementMap` (base64 data URL) | Inline SVG refraction filter |
 | `<ParticleBackground>` | - | Canvas particle network + toggle button |
+| `<FPSGuard>` | - | Auto-strips glass + particles on sustained-low-fps devices; 7-day retest |
 | `<GlassToggle>` | - | Strips glass containers via `html.glass-off` |
 | `<FirstVisitTooltip>` | - | One-time "adjust UI here" hint |
 | `<KeyboardHelpOverlay>` | - | Press `?` for man-page shortcuts |
@@ -327,8 +344,9 @@ import { useLiquidGlassEffects, Spotlight } from '@sohumsuthar/liquid-glass/hook
 useLiquidGlassEffects({
   cursor: true,     // --mx/--my on closest glass
   spotlight: true,   // --cx/--cy on :root
-  reveal: true,      // IntersectionObserver entrance
-  scroll: true,      // html.scrolled + --sv/--svmag
+  reveal: true,      // IntersectionObserver entrance (+ starved-observer rescue net)
+  scroll: true,      // html.scrolled + --sv/--svmag; scroll:false stops the
+                     //   --sv writes → macro velocity squash collapses to identity
   routeKey: '/',     // re-scan on route change
 })
 ```
@@ -366,27 +384,26 @@ Apple motion curves:
 
 ```
 css/
-  liquid-glass-core.css     4-layer glass, glass-off mode, touch gates
+  liquid-glass-core.css     4-layer glass, glass-off mode, .lg-blur-only, touch gates
   liquid-glass-nav.css      navbar, buttons, links, tags, search
-  liquid-glass-effects.css  cursor spotlight, scroll reveal, velocity squash
-  liquid-glass-dock.css     particle/glass/theme toggle pills
+  liquid-glass-effects.css  cursor spotlight, compositor scroll reveal, velocity squash
+  liquid-glass-dock.css     particle/glass/theme toggle pills, FPS-guard notice
   liquid-glass-utils.css    monospace, cursor blink, typography
 
 components/
   LiquidGlass.jsx           <LiquidGlass macro> wrapper
   LiquidGlassFilter.jsx     SVG displacement filter (inline)
-  ParticleBackground.jsx    canvas network + 30fps throttle + mouse interaction
+  ParticleBackground.jsx    canvas network (SoA typed arrays) + 30fps throttle
+  FPSGuard.jsx              auto-degrade glass on sustained-low-fps devices
   GlassToggle.jsx           toggle strips glass containers
   FirstVisitTooltip.jsx     one-time dock hint
   KeyboardHelpOverlay.jsx   press ? for man-page shortcuts
 
 hooks/
-  useLiquidGlassEffects.js  4-in-1: cursor, spotlight, reveal, scroll
+  useLiquidGlassEffects.js  4-in-1: cursor, spotlight, reveal (+ rescue net), scroll
 
 scripts/
   generate-displacement-map.mjs   physics-based refraction PNG generator
-
-SKILL.md                    LLM-readable skill for Claude Code / Cursor
 ```
 
 ---

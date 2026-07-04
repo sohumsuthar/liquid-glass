@@ -16,8 +16,12 @@ import { useEffect } from 'react'
  *            on mousemove. Toggles html.over-glass when over glass.
  *  - spotlight: updates --cx/--cy on :root for the sitewide spotlight.
  *  - reveal: IntersectionObserver adds data-reveal='in' to .liquid-glass
- *            elements as they scroll into view.
- *  - scroll: writes html.scrolled + --sv/--svmag for macro squash effect.
+ *            elements as they scroll into view. Includes a rescue net that
+ *            force-reveals anything left stuck when the observer is starved
+ *            (throttled/backgrounded tabs, bfcache restores, headless renderers).
+ *  - scroll: writes html.scrolled + --sv/--svmag for the macro squash effect.
+ *            Pass scroll:false to stop the --sv/--svmag writes (the squash then
+ *            collapses to identity — no visual squash, one fewer per-frame cost).
  *
  * All effects are desktop-only (hover: hover + pointer: fine).
  * Returns nothing.
@@ -81,7 +85,8 @@ export function useLiquidGlassEffects(opts = {}) {
     }
   }, [cursor, spotlight])
 
-  // Scroll reveal
+  // Scroll reveal (+ rescue net so a starved IntersectionObserver never
+  // leaves content stuck invisible)
   useEffect(() => {
     if (!reveal) return
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
@@ -104,16 +109,64 @@ export function useLiquidGlassEffects(opts = {}) {
       { threshold: 0.08, rootMargin: '0px 0px -5% 0px' }
     )
 
+    // --- Rescue net: reveal is an enhancement, never a gate. ---
+    // data-reveal="" holds content at opacity 0 until an IO callback that can
+    // be starved indefinitely (throttled/backgrounded tabs, bfcache restores,
+    // headless/CDP renderers, buggy embedded webviews) — leaving the page
+    // invisible. If anything well inside the viewport is still hidden after a
+    // bounded window, reveal everything and stop gating for this page-view.
+    // In a healthy browser IO fires within a frame, this finds nothing, and
+    // below-fold scroll-reveal is untouched.
+    const rescue = () => {
+      const stuck = document.querySelectorAll('.liquid-glass[data-reveal=""]')
+      if (!stuck.length) return
+      const vh = window.innerHeight
+      let rescued = 0
+      stuck.forEach((el) => {
+        const r = el.getBoundingClientRect()
+        // "Well inside the viewport" — excludes elements only just entering at
+        // the edges, so a normal IO callback racing this check is never misread
+        // as a dead observer.
+        if (r.top < vh * 0.85 && r.bottom > vh * 0.1) {
+          el.setAttribute('data-reveal', 'in')
+          rescued++
+        }
+      })
+      if (rescued) {
+        document
+          .querySelectorAll('.liquid-glass[data-reveal=""]')
+          .forEach((el) => el.setAttribute('data-reveal', 'in'))
+        observer.disconnect()
+      }
+    }
+
+    let rescueTimer = null
     let rafId = requestAnimationFrame(() => {
       document.querySelectorAll('.liquid-glass:not([data-reveal])').forEach((el) => {
         el.setAttribute('data-reveal', '')
         observer.observe(el)
       })
       rafId = null
+      // Schedule the rescue only AFTER the elements are actually hidden — in a
+      // throttled tab this rAF can run seconds late, and a timer started
+      // alongside it would fire before anything is hidden, no-op, and leave the
+      // page unguarded.
+      rescueTimer = setTimeout(rescue, 1400)
     })
+
+    // Tab restored from background/bfcache: IO may have been throttled the
+    // whole time — re-check as soon as the user can actually see the page.
+    const onVisible = () => {
+      if (!document.hidden) rescue()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pageshow', onVisible)
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId)
+      clearTimeout(rescueTimer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('pageshow', onVisible)
       observer.disconnect()
     }
   }, [reveal, routeKey])
