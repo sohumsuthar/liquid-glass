@@ -42,8 +42,11 @@ import {
  *              render proportionally smaller and stretch back — lossless for
  *              this smooth field)
  *
- * Chrome-only (like the static filter): Safari/Firefox ignore url() in
- * backdrop-filter and keep the blur-only fallback.
+ * Chrome-only (like the static filter): Safari and Firefox ignore url() in
+ * backdrop-filter and keep the blur-only fallback — Safari through the
+ * -webkit-backdrop-filter alias, Firefox through the
+ * @supports (-moz-appearance: none) block in liquid-glass-core.css, since
+ * Gecko never implemented that alias.
  */
 
 // One LUT shared by every instance (profile is size-independent).

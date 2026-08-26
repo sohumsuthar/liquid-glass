@@ -10,7 +10,9 @@
   "exports": {
     ".": "./components/index.js",
     "./css/*": "./css/*",
-    "./hooks": "./hooks/useLiquidGlassEffects.js",
+    "./hooks": "./hooks/useLiquidGlassEffects.jsx",
+    "./hooks/useLiquidGlassEffects": "./hooks/useLiquidGlassEffects.jsx",
+    "./hooks/useLiquidLens": "./hooks/useLiquidLens.jsx",
     "./hooks/*": "./hooks/*",
     "./lib/*": "./lib/*",
     "./optics": "./lib/glass-optics.mjs",
@@ -29,8 +31,8 @@
     "generate-displacement-map": "node scripts/generate-displacement-map.mjs"
   },
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
     "sharp": "^0.34.0"

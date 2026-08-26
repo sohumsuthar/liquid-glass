@@ -134,6 +134,14 @@ html:not(.dark) .lg-nav-link.is-active {
   pointer-events: none;
   z-index: 1;
 }
+/* corner-shape does not inherit (see liquid-glass-core.css): this ring
+   inherits the radius, so on a squircle .liquid-glass it must opt in or it
+   draws a circular arc inside the container silhouette. */
+@supports (corner-shape: squircle) {
+  .lg-ai-gradient::before {
+    corner-shape: inherit;
+  }
+}
 @keyframes lg-ai-angle-spin { to { --lg-ai-angle: 360deg; } }
 
 /* Apple-style glass pill tags */

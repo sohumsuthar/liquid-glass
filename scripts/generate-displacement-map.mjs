@@ -9,6 +9,7 @@
 //
 // Run: node scripts/generate-displacement-map.mjs
 import sharp from 'sharp'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildDisplacementLUT, renderDisplacementMap } from '../lib/glass-optics.mjs'
@@ -35,6 +36,7 @@ async function generate() {
   })
 
   const out = path.join(root, 'public/static/images/lg-displacement.png')
+  fs.mkdirSync(path.dirname(out), { recursive: true })
   await sharp(buffer, { raw: { width: SIZE, height: SIZE, channels: 4 } })
     .png({ compressionLevel: 9 })
     .toFile(out)

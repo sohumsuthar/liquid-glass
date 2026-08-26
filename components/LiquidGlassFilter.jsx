@@ -12,7 +12,7 @@
  *   import fs from 'fs'
  *   import path from 'path'
  *   const buf = fs.readFileSync(
- *     path.join(process.cwd(), 'public/lg-displacement.png')
+ *     path.join(process.cwd(), 'public/static/images/lg-displacement.png')
  *   )
  *   const DISP_MAP = `data:image/png;base64,${buf.toString('base64')}`
  *
@@ -70,25 +70,34 @@ function ChromaticDisplacement({ map, scale, dispersion }) {
  *   scale            objectBoundingBox displacement scale
  *                    (default 0.1 = physically exact; was 0.45 pre-2.0)
  *   smScale          scale for the inner-card filter (default = scale)
- *   dispersion       chromatic-aberration strength; 0 = off (default),
- *                    1 = physically exact BK7, ~8 = visible fringe.
+ *   dispersion       chromatic-aberration strength for the MACRO filter
+ *                    (#lg-refract); 0 = off (default), 1 = physically exact
+ *                    BK7, ~8 = visible fringe.
  *                    OFF by default for a reason: the CA graph runs THREE
  *                    feDisplacementMap passes over the backdrop, and with
  *                    many concurrent glass elements it can stall Chrome's
  *                    compositor (measured: 5 CA elements froze capture,
  *                    1 was fine). Enable it only on pages with 1-3 glass
  *                    surfaces, or use the per-element lens for heroes.
+ *   smDispersion     same, for the inner-card filter #lg-refract-sm
+ *                    (default 0). Kept separate because core.css puts
+ *                    #lg-refract-sm on EVERY non-macro .liquid-glass, so a
+ *                    shared knob would apply the 3-pass graph to the whole
+ *                    fleet — exactly the configuration measured to stall the
+ *                    compositor. Raise it only if the page has very few
+ *                    non-macro glass surfaces.
  */
 export default function LiquidGlassFilter({
   displacementMap,
   scale = PHYSICAL_SCALE,
   smScale,
   dispersion = 0,
+  smDispersion = 0,
 }) {
   if (!displacementMap) return null
   const filters = [
-    { id: 'lg-refract', s: scale },
-    { id: 'lg-refract-sm', s: smScale ?? scale },
+    { id: 'lg-refract', s: scale, d: dispersion },
+    { id: 'lg-refract-sm', s: smScale ?? scale, d: smDispersion },
   ]
   return (
     <svg
@@ -101,7 +110,7 @@ export default function LiquidGlassFilter({
       }}
       aria-hidden="true"
     >
-      {filters.map(({ id, s }) => (
+      {filters.map(({ id, s, d }) => (
         <filter
           key={id}
           id={id}
@@ -123,7 +132,7 @@ export default function LiquidGlassFilter({
             preserveAspectRatio="none"
             result="dispMap"
           />
-          <ChromaticDisplacement map="dispMap" scale={s} dispersion={dispersion} />
+          <ChromaticDisplacement map="dispMap" scale={s} dispersion={d} />
         </filter>
       ))}
     </svg>

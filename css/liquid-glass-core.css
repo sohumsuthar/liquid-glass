@@ -56,11 +56,22 @@
 /* True superellipse corners where supported (Chrome 139+).
    border-radius rounds with circular arcs; the real material uses
    continuous-curvature squircles. Progressive enhancement - the
-   displacement map's SDF corners remain circular, but at these radii
-   the divergence is sub-pixel. */
+   displacement map's SDF corners remain circular, a divergence the
+   bezel gradient absorbs.
+   corner-shape does NOT inherit, and `border-radius: inherit` carries the
+   radius only, so every layer that inherits the radius must opt in or it
+   draws a circular arc ~0.19r inside the squircle silhouette and the
+   corners read as a doubled outline. `inherit` chains: the shine resolves
+   to the container's shape, and its ::before then resolves to the shine's. */
 @supports (corner-shape: squircle) {
   .liquid-glass {
     corner-shape: squircle;
+  }
+  .liquid-glass-shine,
+  .liquid-glass-shine::before,
+  .liquid-glass::before,
+  .liquid-glass::after {
+    corner-shape: inherit;
   }
 }
 
@@ -99,6 +110,21 @@ a.liquid-glass:hover,
   overflow: hidden;
   backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast)) var(--lg-refract);
   -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
+}
+
+/* Firefox degradation. WebKit falls back through -webkit-backdrop-filter
+   above (it is a WebKit alias, so the blur-only declaration wins there),
+   but Gecko never implemented that alias — it parses only the declaration
+   above, which carries var(--lg-refract), and it cannot apply an
+   feImage/feDisplacementMap graph to a backdrop. Without this block the
+   whole filter is dropped and the panel renders as a flat tint over a
+   sharp background. (-moz-appearance: none) is true in Firefox only, and
+   this sits after the base rule so it wins on source order at equal
+   specificity; it is inert in Blink and WebKit. */
+@supports (-moz-appearance: none) {
+  .liquid-glass-effect {
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
+  }
 }
 
 /* Opt-in perf lever (v1.1.0) — blur-only inner cards.

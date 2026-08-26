@@ -149,7 +149,14 @@ export function useLiquidGlassEffects(opts = {}) {
 
     let rescueTimer = null
     let rafId = requestAnimationFrame(() => {
-      document.querySelectorAll('.liquid-glass:not([data-reveal])').forEach((el) => {
+      // Seed on the absence of the REVEALED state, not of the attribute: a
+      // previous run (route change) may have stamped data-reveal="" on
+      // elements that never intersected, and its observer is disconnected by
+      // the cleanup below. Matching :not([data-reveal]) would skip exactly
+      // those, stranding them at opacity 0 with nothing left watching them.
+      // Re-setting data-reveal="" on an already-stamped element is
+      // idempotent — no style change, no transition restart.
+      document.querySelectorAll('.liquid-glass:not([data-reveal="in"])').forEach((el) => {
         el.setAttribute('data-reveal', '')
         observer.observe(el)
       })

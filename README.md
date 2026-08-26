@@ -14,6 +14,8 @@ A physically accurate glass material for the web.
 npm install @sohumsuthar/liquid-glass
 ```
 
+Requires React 18 or later (the lens hook uses `useId`).
+
 ```jsx
 // Import the core CSS (required)
 import '@sohumsuthar/liquid-glass/css/liquid-glass-core.css'
@@ -202,7 +204,7 @@ backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) var(--
 
 `--lg-refract` defaults to `url(#lg-refract-sm)` (inner cards) / `url(#lg-refract)` (macros); the lens hook swaps in its per-element filter by setting the variable inline.
 
-**Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter` and fall back to the blur-only `-webkit-backdrop-filter`. (WebKit has patches in flight for `backdrop-filter: url()` as of mid-2026; Firefox has no signal.) Graceful degradation, not feature parity.
+**Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter`, but they reach the blur-only fallback by different routes. Safari falls back through `-webkit-backdrop-filter`, a WebKit alias, so the blur-only declaration wins there. Gecko never implemented that alias, so `liquid-glass-core.css` gives Firefox its own blur-only declaration in an `@supports (-moz-appearance: none)` block — without it Firefox would parse only the `url()`-bearing declaration and drop the filter entirely. (WebKit has patches in flight for `backdrop-filter: url()` as of mid-2026; Firefox has no signal.) Graceful degradation, not feature parity.
 
 ---
 
@@ -222,7 +224,7 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | `.lg-blur-only` (opt-in) | Drops inner-card SVG displacement | Lighter scroll recalc |
 | `<FPSGuard>` (opt-in) | Auto-strips glass on sustained-low-fps devices | Graceful degradation |
 
-**Dispersion budget:** the chromatic-aberration graph triples the displacement work. Measured on Chrome/Windows: 1 CA element fine, 5 CA elements stalled the compositor. Use dispersion on 1-3 hero surfaces only (lens mode or `<LiquidGlassFilter dispersion={8}>` on small pages); leave fleet filters single-pass.
+**Dispersion budget:** the chromatic-aberration graph triples the displacement work. Measured on Chrome/Windows: 1 CA element fine, 5 CA elements stalled the compositor. Use dispersion on 1-3 hero surfaces only (lens mode, or `<LiquidGlassFilter dispersion={8}>` which applies it to the macro filter `#lg-refract` alone). The fleet filter `#lg-refract-sm` sits on every non-macro `.liquid-glass` and stays single-pass unless you explicitly raise `smDispersion`.
 
 **Lens budget:** map generation is canvas work on resize only (rAF-debounced, ResizeObserver). Steady-state cost equals any other single-displacement backdrop filter plus the CA passes if enabled.
 
@@ -276,7 +278,7 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | Component | Props | Description |
 |-----------|-------|-------------|
 | `<LiquidGlass>` | `macro`, `variant` (`'clear'`\|`'regular'`), `dimmed`, `interactive`, `lens`, `lensOptions`, `mobileFlat`, `className`, `contentClassName` | 4-layer container |
-| `<LiquidGlassFilter>` | `displacementMap` (base64 data URL), `scale` (default 0.1), `smScale`, `dispersion` (default 0) | Shared SVG refraction filters |
+| `<LiquidGlassFilter>` | `displacementMap` (base64 data URL), `scale` (default 0.1), `smScale`, `dispersion` (default 0, macro filter), `smDispersion` (default 0, fleet filter) | Shared SVG refraction filters |
 | `<ParticleBackground>` | - | Canvas particle network + toggle button |
 | `<FPSGuard>` | - | Auto-strips glass on sustained-low-fps devices; 7-day retest |
 | `<GlassToggle>` | - | Strips glass containers via `html.glass-off` |

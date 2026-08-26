@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { useLiquidLens } from '../hooks/useLiquidLens.js'
+import { useLiquidLens } from '../hooks/useLiquidLens.jsx'
 
 /**
  * LiquidGlass - the 4-layer container.
