@@ -63,6 +63,13 @@ export function useLiquidGlassEffects(opts = {}) {
           const rect = closest.getBoundingClientRect()
           closest.style.setProperty('--mx', `${e.clientX - rect.left}px`)
           closest.style.setProperty('--my', `${e.clientY - rect.top}px`)
+          // Rotate the specular rim toward the cursor — Apple's highlight
+          // lights "move in space" during interaction (WWDC 219). Conic
+          // angle convention: 0deg = up, clockwise.
+          const dx = e.clientX - (rect.left + rect.width / 2)
+          const dy = e.clientY - (rect.top + rect.height / 2)
+          const angle = (Math.atan2(dx, -dy) * 180) / Math.PI
+          closest.style.setProperty('--lg-light-angle', `${angle.toFixed(1)}deg`)
         }
         const overGlass = !!closest
         if (overGlass !== wasOverGlass) {

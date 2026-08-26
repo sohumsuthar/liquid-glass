@@ -2,7 +2,7 @@
 
 A physically accurate glass material for the web.
 
-4-layer compositing architecture, physics-based SVG refraction using Snell's law and the convex squircle surface profile, performance-gated to run 20+ concurrent glass elements at 120fps.
+4-layer compositing architecture, ray-traced SVG refraction (Snell's law through a convex-squircle glass slab), Fresnel-shaped specular rim, chromatic dispersion from real crown-glass indices, and Apple's regular/clear variant system - performance-gated to run 20+ concurrent glass elements at 120fps.
 
 **Blog post:** [the physics behind my site's new ui](https://www.sohumsuthar.com/posts/ui-overhaul-physics)
 
@@ -45,17 +45,26 @@ Or use the HTML classes directly:
 </div>
 ```
 
+A standalone browser demo lives in `demo/index.html` (open over any local static server).
+
 ---
 
-## What's new in 1.1.0
+## What's new in 2.0.0
 
-Additive and non-breaking — drop-in upgrade from 1.0.x with **no visual change by default**. Every existing capability (macros, `#lg-refract`/`#lg-refract-sm`, `<LiquidGlassFilter>`, the scroll-velocity squash) still ships. New this release:
+A ground-up fidelity pass against the real material (WWDC 2025 session 219 "Meet Liquid Glass", session 356, the HIG Materials spec, and the strongest community reverse-engineering). Everything below is grounded in either Apple's own description of the material or measured physics.
 
-- **`<FPSGuard>`** — an adaptive perf guard. One `requestAnimationFrame` samples frame cadence over a fixed ring buffer (O(1), zero per-frame allocation); if a rolling average stays below 24fps for ~4s on a struggling device, it gracefully strips glass + particles (`html.glass-off` + `html.particles-off`) and shows a dismissible notice. Never writes user-preference keys, so it can't permanently disable glass; re-tests every 7 days. Pairs with `<GlassToggle>`.
-- **Compositor scroll reveal** — the entrance animation is now a direct `transform`+`opacity` transition instead of `@property` registered-custom-property interpolation. Same 16px / 0.96 / eases → a pixel-identical pop, but it runs off the main thread and now also animates in Firefox (which didn't register the old `@property` form).
-- **Reveal rescue net** — `useLiquidGlassEffects`'s `reveal` effect now force-reveals anything left stuck when the `IntersectionObserver` is starved (throttled/backgrounded tabs, bfcache restores, headless/CDP renderers), so content can never end up permanently invisible.
-- **Faster particles** — `<ParticleBackground>` internals rewritten to Structure-of-Arrays typed arrays with pre-computed style LUTs, batched grab lines, and a rAF-debounced resize. Same pixels, strictly less work.
-- **`.lg-blur-only`** — opt-in perf lever. Set `html.lg-blur-only` (global) or add `.lg-blur-only` to an individual `.liquid-glass` to drop inner-card SVG refraction and run blur-only for lighter scroll cost. Default is unchanged (inner cards keep `#lg-refract-sm`); `.lg-macro` surfaces keep `#lg-refract` either way.
+- **Ray-traced refraction (fixed physics).** The 1.x displacement model `d = f'/(1+f'²)` equals `½·sin 2θ` - it peaks at a 45° surface slope and falls to **zero at the rim**, exactly where real glass bends light hardest. 2.0 traces the actual ray: Snell refraction at the curved top surface, propagation through the slab, thickness-weighted lateral shift, and a Fresnel-transmittance fade at the grazing rim. Peak displacement now sits at the rim edge (x ≈ 0.01 of the bezel, not x ≈ 0.16) and decays smoothly inward. The map generator and all constants live in `lib/glass-optics.mjs`.
+- **Chromatic dispersion.** Optional per-channel refraction using real BK7 crown-glass Fraunhofer indices (n_C = 1.5143, n_d = 1.5168, n_F = 1.5224) via the thin-prism ratio (n−1)/(n_d−1), with an exaggeration factor for UI scale. Blue bends more than red, as in real glass. **Off by default on the shared fleet filters** - the 3-pass graph can stall Chrome's compositor with many elements (measured: 5 froze capture, 1 was fine). Enable for 1-3 hero surfaces.
+- **Per-element lens (`useLiquidLens` / `<LiquidGlass lens>`).** The static 512×512 map stretches with the element, so the bezel scales with size and turns elliptical on wide cards. The lens hook renders a map at the element's true CSS-pixel size with a **constant bezel width in px** (like the real material), applies it via a per-element `userSpaceOnUse` filter, regenerates on resize, and includes dispersion.
+- **Regular / clear variants.** Apple ships exactly two: `regular` (frosted, adaptive, for text-heavy surfaces) and `clear` (highly translucent, for media, requires a dimming layer). The 1.x look maps to clear and stays the default; `.lg-regular` adds the frosted variant, `.lg-dimmed` adds Apple's prescribed 35% dimming layer.
+- **Directional specular rim.** The uniform 1px ring is replaced by a conic-gradient ring with a key light at the top-left rim and a secondary reflection at the bottom-right - Apple's "highlights layer". The cursor hook rotates `--lg-light-angle` live so the lights **move in space** during interaction, per WWDC 219.
+- **Self-illumination (`.lg-interactive`).** Apple's `.interactive()` gel: press → spring scale-up (magnetic ease), rim energize, tint brighten, and an internal glow that blooms from under the pointer.
+- **Scroll edge effects.** `.lg-scroll-edge` (+ `-top/-bottom/-hard`) - the companion system where content dissolves under floating glass near screen edges.
+- **Reduce Transparency parity.** `prefers-reduced-transparency` now swaps refraction for a frostier, more opaque material instead of leaving glass fully transparent - the same mapping Apple uses.
+- **`corner-shape: squircle`** progressive enhancement (Chrome 139+) for continuous-curvature corners.
+- **Design tokens.** `--lg-blur/--lg-saturate/--lg-brightness/--lg-contrast/--lg-refract/--lg-radius/--lg-light-angle` drive the material; variants are just token overrides.
+
+Back-compat: the four-layer HTML structure, all 1.x class names, `#lg-refract`/`#lg-refract-sm`, the perf gates, FPSGuard, and the hooks API are unchanged. Regenerate your displacement map (`npm run generate-displacement-map`) and note the static filter's physically-calibrated default `scale` is now 0.1 (was 0.45 - see below).
 
 ---
 
@@ -69,197 +78,131 @@ Every glass surface is four absolutely-positioned layers inside a container, plu
 │                                                       │
 │  ┌─ .liquid-glass-effect (z:0) ─────────────────┐    │
 │  │  backdrop-filter: blur saturate brightness    │    │
-│  │  + url(#lg-refract) SVG displacement on all    │    │
+│  │  + var(--lg-refract) SVG displacement         │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-tint (z:1) ───────────────────┐    │
 │  │  solid base color - visible even on black     │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-shine (z:2) ──────────────────┐    │
-│  │  4 inset box-shadows (lit bezel)              │    │
+│  │  Fresnel bezel (inset shadows)                │    │
+│  │  ::before → directional conic specular ring   │    │
 │  └───────────────────────────────────────────────┘    │
 │  ┌─ .liquid-glass-content (z:3) ────────────────┐    │
 │  │  your content                                 │    │
 │  └───────────────────────────────────────────────┘    │
 │                                                       │
-│  ::after (z:4)   → cursor-tracking glow, screen      │
+│  ::after (z:4)   → cursor glow / self-illumination   │
 └───────────────────────────────────────────────────────┘
 ```
+
+This mirrors Apple's own decomposition of the material (WWDC 219): a lensing layer, a tint/adaptive-luminosity layer, a highlights layer, and a shadows layer, with content always on top.
 
 ### Why four layers?
 
 A single `backdrop-filter` element can't simultaneously:
-- Blur the background (layer 0)
+- Refract and blur the background (layer 0)
 - Provide a visible base tint that shows on pure-black backgrounds (layer 1)
-- Render sub-pixel inset rim highlights that track border-radius (layer 2)
+- Render sub-pixel rim highlights that track border-radius (layer 2)
 - Keep content above all material effects (layer 3)
 
 The split architecture lets each layer use a different `z-index`, blend mode, and composition strategy independently.
 
-### The lit bezel
+### Variants
 
-Apple's glass has a characteristic bright edge just inside the rounded border. This is four stacked `inset` box-shadows:
+Apple ships exactly two material variants and warns against mixing them in one interface:
 
-```css
-box-shadow:
-  inset 0 0 0 1px rgba(255, 255, 255, 0.06),     /* 1px ring */
-  inset 0 0 6px 0 rgba(255, 255, 255, 0.04),     /* feathered glow */
-  inset 0 2px 4px -2px rgba(255, 255, 255, 0.18), /* top specular */
-  inset 0 -2px 4px -2px rgba(0, 0, 0, 0.25);     /* bottom shadow */
-```
+| | Default (= Apple "clear") | `.lg-regular` |
+|---|---|---|
+| Blur | 2px | 12px |
+| Tint (dark) | `rgba(28,28,32,0.30)` | `rgba(34,34,38,0.62)` |
+| Tint (light) | `rgba(255,255,255,0.40)` | `rgba(248,248,250,0.66)` |
+| Use for | glass over media-rich content | text-heavy surfaces (bars, cards, menus) |
+| Legibility | add `.lg-dimmed` (35% dim layer, per HIG) | built in |
 
-The top-to-bottom opacity ratio is `0.18 : 0.25 ≈ 1 : 1.4`. This asymmetry is what makes the glass read as **convex** rather than flat. Invert the ratio for concave; equal values for flat.
+### The specular rim
+
+Two mechanisms, both physically motivated:
+
+1. **Fresnel bezel** (inset box-shadows): unpolarized reflectance R(θ) = ½(rs² + rp²) rises from 4% at normal incidence to 100% at the grazing rim, so the rim ring is a thin bright core with fast feathered decay. The top-to-bottom `0.18 : 0.25` asymmetry keeps the convex read (invert for concave).
+2. **Directional ring** (`.liquid-glass-shine::before`): a conic gradient whose 270° peak lands exactly at `--lg-light-angle` (default 315° - Apple's canonical top-left key light) with a secondary lobe at +180°. The cursor hook rotates the variable toward the pointer, reproducing the "lights move in space" behavior described in WWDC 219.
 
 ### The base tint
 
-The #1 mistake in every glassmorphism tutorial: using `background: rgba(255,255,255,0.1)` with `mix-blend-mode: overlay`. This vanishes on pure-black backgrounds.
-
-Apple's Control Center panels have a **visible dark-gray fill** even on black. The tint layer uses a solid color with opacity:
-
-| Mode | Inner cards | Macro wrappers |
-|------|-------------|----------------|
-| Dark | `rgba(28, 28, 32, 0.30)` | `rgba(20, 20, 24, 0.30)` |
-| Light | `rgba(255, 255, 255, 0.40)` | `rgba(255, 255, 255, 0.40)` |
-
-No blend mode. Just a partially-transparent fill.
+The #1 mistake in every glassmorphism tutorial: using `background: rgba(255,255,255,0.1)` with `mix-blend-mode: overlay`. This vanishes on pure-black backgrounds. Apple's panels keep a visible fill even on black; the tint layer is a plain partially-transparent fill, no blend mode.
 
 ---
 
 ## Physics of Refraction
 
-Standard glassmorphism uses `backdrop-filter: blur()` which simulates **frosted glass** - light scattering uniformly. Real glass doesn't just scatter; it **bends** light based on surface curvature. This bending is refraction.
+Standard glassmorphism uses `backdrop-filter: blur()`, which simulates **frosted glass** - light scattering uniformly. Apple describes Liquid Glass as the opposite: a material that "dynamically bends, shapes and concentrates light" - **lensing**, not scattering. That bending is refraction.
 
-### Snell's Law
+### The model
 
-When light passes from a medium with refractive index `n₁` into a medium with index `n₂`, the relationship between the incident angle `θ₁` and the refracted angle `θ₂` is:
-
-```
-n₁ · sin(θ₁) = n₂ · sin(θ₂)
-```
-
-For air (`n₁ = 1.0`) into glass (`n₂ = 1.5`):
+The glass is a slab resting on the background plane, with a **convex squircle** bezel profile (height vs normalized distance x from the outer edge):
 
 ```
-sin(θ₂) = sin(θ₁) / 1.5
+f(x) = (1 - (1-x)^4)^(1/4)
 ```
 
-The refracted ray bends **toward** the surface normal when entering a denser medium, then bends **away** when exiting. For thin glass viewed head-on, this produces a lateral displacement of the background - content behind the glass edge appears shifted inward.
+The squircle's advantage over a circular arc `√(1-(1-x)²)`: a softer transition from flat interior to curved bezel, so no visible inflection artifact when the profile is swept around a rectangle.
 
-### Surface Function
-
-The amount of bending depends on the **slope** of the glass surface at each point. We define the glass cross-section as a height function `f(x)` where `x ∈ [0, 1]` is the normalized distance from the outer border (`x = 0`) to the inner flat surface (`x = 1`).
-
-The surface uses the **convex squircle** (superellipse) profile:
+A vertical viewing ray is traced through the slab:
 
 ```
-f(x) = ⁴√(1 - (1-x)⁴)
+θs(x) = atan f'(x)              surface tilt = angle of incidence
+θr(x) = asin(sin θs / n)        Snell's law, n = 1.5168 (BK7 crown glass)
+t(x)  = T0 + B·f(x)             glass thickness below the entry point
+d(x)  = t(x) · tan(θs - θr)     lateral shift at the background plane
 ```
 
-This is the fourth root of a quartic complement. Compare with a simple circular arc:
+The exit face is flat and the background sits directly behind it, so the exit refraction adds no further shift. The displacement is additionally weighted by **Fresnel transmittance** `1 - R(θs)`: at the grazing rim the surface stops transmitting and starts reflecting - which is also the physical justification for the bright rim ring.
 
-```
-f_circle(x) = √(1 - (1-x)²)
-```
+`d(x)` peaks essentially at the rim (x ≈ 0.01, value ≈ 0.76·B for n = 1.52 before the Fresnel fade) and decays monotonically inward - matching the strong edge-lensing of the real material.
 
-The squircle's advantage: it has a **softer transition** from flat interior to curved bezel. The circular arc creates a harsh inflection point where the curve meets the flat zone, producing visible refraction artifacts when stretched into rectangles. The squircle keeps gradients smooth.
+> The 1.x model `d = f'/(1+f'²) = ½·sin 2θ` peaked at a 45° slope (x ≈ 0.16) and fell to ~0 at the rim - a dead zone exactly where lensing should be strongest. If you're upgrading: regenerate the map.
 
-### Computing Displacement
+### Direction
 
-At each point in the bezel zone, the surface slope determines how much a light ray is displaced:
+The displacement vector points along the negated SDF gradient - **inward, toward the center**. A convex slab magnifies: each display pixel samples background from slightly closer to the center. (Some recreations describe this as content appearing "pushed outward" - same thing, seen from the other side.)
 
-```
-slope(x) = f'(x) = d/dx ⁴√(1 - (1-x)⁴)
-```
+### Dispersion (chromatic aberration)
 
-Numerically approximated:
+Refractive index varies with wavelength (Cauchy: n(λ) = A + B/λ²). For BK7 crown glass at the Fraunhofer lines:
 
-```
-f'(x) ≈ (f(x + δ) - f(x - δ)) / 2δ,  δ = 0.001
-```
+| Channel | λ | n | relative displacement (n−1)/(n_d−1) |
+|---|---|---|---|
+| Red | 656 nm | 1.5143 | 0.99516 |
+| Green | 588 nm | 1.5168 | 1.00000 |
+| Blue | 486 nm | 1.5224 | 1.01084 |
 
-The displacement magnitude is derived from a simplified single-refraction model:
-
-```
-d(x) = f'(x) / (1 + f'(x)²)
-```
-
-This has the desired property: maximum at the border (where slope is steepest), decaying to zero at the flat interior.
-
-We precompute 127 displacement samples along one radius (matching the 8-bit channel resolution of the displacement map):
-
-```js
-for (let i = 0; i <= 127; i++) {
-  const x = i / 127
-  const slope = fPrime(x)
-  dispLUT[i] = slope / (1 + slope * slope)
-}
-```
-
-### Vector Field
-
-The displacement map needs both **magnitude** and **direction** at every pixel. Direction is determined by the **gradient of the signed distance field** (SDF) of the rounded rectangle:
-
-```
-n(p) = ∇ SDF(p)
-```
-
-This gradient always points **orthogonal to the nearest border**, exactly the direction a refracted ray would shift. For convex glass, the displacement is **inward** (toward the center):
-
-```
-d(p) = -n(p) · d(‖p - border‖ / w) / d_max
-```
-
-where `w` is the bezel width and `d_max` normalizes the output to `[-1, 1]`.
+Physically exact fringing is only ~1% - invisible at UI scale - so `dispersionScales(strength)` exaggerates the spread linearly (strength ≈ 8 gives a ~2px fringe on a hero card). The filter graph: three `feDisplacementMap` passes at the per-channel scales → `feColorMatrix` channel isolation → two `feBlend mode="screen"` recombines (channels are disjoint, so screen = add). Fringes appear only where displacement is non-zero, i.e. the rim - the interior stays clean automatically because the map is neutral there.
 
 ### Encoding as RGB
 
-SVG's `<feDisplacementMap>` reads displacement from an image. Each pixel's red channel encodes the X displacement, green encodes Y. The neutral value (no displacement) is 128:
+`feDisplacementMap` reads displacement from an image: R = X, G = Y, 128 = neutral, offset = scale × (channel/255 − 0.5). The LUT is normalized so its peak hits channel 255 (full 8-bit precision), and the filter's `scale` converts back to physical units:
 
-```
-R = 128 + dx · 127
-G = 128 + dy · 127
-B = 128,  A = 255
-```
+- **Static filters** (`objectBoundingBox`): bezel = 48/512 = 9.4% of the element, peak = 0.524 × bezel ≈ 4.9% of element size, so the physically-exact scale is 2.008 × 0.049 ≈ **0.1** (the new default).
+- **Lens filters** (`userSpaceOnUse`): scale = 2.008 × 0.524 × bezel_px ≈ 1.05 × bezel_px.
 
-The `scale` attribute on `<feDisplacementMap>` multiplies the decoded displacement:
+`colorInterpolationFilters="sRGB"` is mandatory - in linearRGB the 128-neutral drifts and the whole backdrop shifts.
 
-- A pixel with `R = 255` displaces by `+scale` pixels in X
-- `R = 0` displaces by `-scale` pixels
-- `R = 128` is neutral
-
-With `filterUnits="objectBoundingBox"` and `primitiveUnits="objectBoundingBox"`, scale is a fraction of the element's dimensions. A scale of `0.45` produces a maximum displacement of 45% of the element width. Both `#lg-refract` (macros) and `#lg-refract-sm` (inner cards) use the same 0.45 scale.
-
-### Generating the Map
+### Generating the map
 
 ```bash
 npm run generate-displacement-map
 ```
 
-This runs `scripts/generate-displacement-map.mjs` which:
-
-1. Creates a 512×512 canvas
-2. For each pixel, computes the SDF distance to a rounded rectangle (radius 48px, bezel 48px)
-3. If inside the bezel zone, looks up the precomputed displacement magnitude
-4. Computes the SDF gradient for direction
-5. Encodes as R/G pixel values
-6. Writes the PNG
-
-The output is a color-encoded vector field where the bezel ring shows up as colored bands (red/green/cyan/magenta gradients) and the flat interior is neutral gray (128, 128).
+`scripts/generate-displacement-map.mjs` renders the vector field for a 512×512 rounded rect (radius 48, bezel 48) via the shared `lib/glass-optics.mjs` (exact rounded-rect SDF for direction, ray-trace LUT for magnitude, linear-interpolated sampling). The PNG must be **base64-inlined** into the SVG filter - `feImage` silently fails on external URLs from zero-size SVGs in some browsers.
 
 ### Applying via SVG
 
-The displacement PNG must be **base64-inlined** in the SVG. `feImage` silently fails to load external URLs from zero-size SVGs in some browsers:
-
-```jsx
-<LiquidGlassFilter displacementMap={base64DataUrl} />
-```
-
-The CSS chains it with `backdrop-filter`:
-
 ```css
-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
+backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) var(--lg-refract);
 ```
 
-**Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter` and fall back to the blur-only `-webkit-backdrop-filter`. Graceful degradation, not feature parity.
+`--lg-refract` defaults to `url(#lg-refract-sm)` (inner cards) / `url(#lg-refract)` (macros); the lens hook swaps in its per-element filter by setting the variable inline.
+
+**Chrome-only.** Safari and Firefox ignore `url()` in `backdrop-filter` and fall back to the blur-only `-webkit-backdrop-filter`. (WebKit has patches in flight for `backdrop-filter: url()` as of mid-2026; Firefox has no signal.) Graceful degradation, not feature parity.
 
 ---
 
@@ -272,23 +215,16 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 | `content-visibility: auto` | Off-screen glass skips rendering | ~80% with 20+ cards |
 | `contain: layout paint` | Isolates repaint scope per card | ~20% paint reduction |
 | `isolation: isolate` | Reduces backdrop sample region | 30-40% filter cost |
-| SVG displacement on all surfaces | Unified config, `#lg-refract` macros + `#lg-refract-sm` inner cards | Full refraction everywhere |
-| Blur capped at 2px | Clear glass - minimal blur cost | ~90% vs 28px |
+| Single-pass displacement default | Dispersion off on fleet filters | avoids compositor stalls |
+| Blur capped at 2px (clear) | Minimal blur cost | ~90% vs 28px |
 | Particle canvas at 30fps | Halves backdrop-filter cache invalidation | ~50% composite cost |
 | Touch gates `(hover: none)` | Disables spotlight, cursor, reveal, squash | 100% on mobile |
-| `.lg-blur-only` (opt-in) | Drops inner-card SVG displacement (blur-only) | Lighter scroll recalc; off by default |
+| `.lg-blur-only` (opt-in) | Drops inner-card SVG displacement | Lighter scroll recalc |
 | `<FPSGuard>` (opt-in) | Auto-strips glass on sustained-low-fps devices | Graceful degradation |
 
-### Touch Device Behavior
+**Dispersion budget:** the chromatic-aberration graph triples the displacement work. Measured on Chrome/Windows: 1 CA element fine, 5 CA elements stalled the compositor. Use dispersion on 1-3 hero surfaces only (lens mode or `<LiquidGlassFilter dispersion={8}>` on small pages); leave fleet filters single-pass.
 
-On `(hover: none)` / `(pointer: coarse)` devices:
-- Cursor spotlight → hidden
-- Scroll reveal → elements visible immediately, no animation
-- Per-glass cursor glow → hidden
-- Scroll-velocity squash → disabled
-- Particle canvas → hidden
-- `content-visibility` → reverted to `visible`
-- Matching 2px blur
+**Lens budget:** map generation is canvas work on resize only (rAF-debounced, ResizeObserver). Steady-state cost equals any other single-displacement backdrop filter plus the CA passes if enabled.
 
 ---
 
@@ -299,19 +235,30 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | Class | Purpose |
 |-------|---------|
 | `.liquid-glass` | Container - applies all 4 layers when children are present |
-| `.lg-macro` | Uses `#lg-refract` (larger-scale displacement); inner cards use `#lg-refract-sm` |
+| `.lg-macro` | Thicker glass: `#lg-refract`, wider rim, deeper shadows |
+| `.lg-regular` | Apple's frosted adaptive variant (text-heavy surfaces) |
+| `.lg-dimmed` | 35% dimming layer for clear glass over bright media (HIG) |
+| `.lg-interactive` | Gel press: spring scale, rim energize, self-illumination |
 | `.lg-mobile-flat` | Strips the container on screens ≤639px |
-| `.lg-blur-only` | Opt-in perf lever — drops inner-card SVG refraction (blur-only). Put on a `.liquid-glass`, or on `<html>` to apply globally. `.lg-macro` keeps its displacement. |
+| `.lg-blur-only` | Opt-in perf lever - drops inner-card SVG refraction |
+| `.lg-scroll-edge` (+`-top/-bottom/-hard`) | Scroll edge effect under floating glass |
 | `.lg-navbar` | Dynamic Island pill with sticky positioning |
-| `.lg-nav-btn` | Circular icon button |
-| `.lg-nav-link` | Text pill nav link (+ `.is-active`) |
-| `.lg-ai-gradient` | Animated rainbow border (`@property --lg-ai-angle`) |
+| `.lg-nav-btn` / `.lg-nav-link` | Circular icon button / text pill (+ `.is-active`) |
+| `.lg-ai-gradient` | Animated rainbow border |
 | `.lg-tag` | Small glass pill (tags, badges) |
-| `.lg-search-input` | Spotlight-style input |
-| `.lg-spotlight-dropdown` | Glass dropdown panel |
-| `.lg-mono` | SF Mono / JetBrains Mono monospace |
-| `.lg-cursor-blink` | Terminal cursor blink animation |
-| `.lg-logo-spin` | Loading spinner rotation (2.4s) |
+| `.lg-search-input` / `.lg-spotlight-dropdown` | Spotlight-style input / dropdown |
+| `.lg-mono` / `.lg-cursor-blink` / `.lg-logo-spin` | Utilities |
+
+### Design tokens (CSS custom properties)
+
+| Token | Default | Meaning |
+|---|---|---|
+| `--lg-blur` | `2px` (12px regular) | backdrop blur |
+| `--lg-saturate` | `180%` | backdrop saturation |
+| `--lg-brightness` / `--lg-contrast` | `1.06` / `1.04` | backdrop luminosity |
+| `--lg-refract` | `url(#lg-refract-sm)` | SVG filter reference (lens overrides inline) |
+| `--lg-radius` | `22px` | corner radius |
+| `--lg-light-angle` | `315deg` | specular key-light direction (0° = up, clockwise) |
 
 ### HTML Class Toggles
 
@@ -320,7 +267,7 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 | `dark` | Theme toggle | Switches all glass to dark mode values |
 | `glass-off` | `GlassToggle` / `FPSGuard` | Strips all `.liquid-glass` containers |
 | `particles-off` | `ParticleBackground` / `FPSGuard` | Marks particle canvas disabled |
-| `lg-blur-only` | You (opt-in) | Drops inner-card SVG refraction site-wide (blur-only) |
+| `lg-blur-only` | You (opt-in) | Drops inner-card SVG refraction site-wide |
 | `over-glass` | Cursor hook | Brightens sitewide spotlight |
 | `scrolled` | Scroll hook | Shrinks sticky navbar |
 
@@ -328,71 +275,81 @@ On `(hover: none)` / `(pointer: coarse)` devices:
 
 | Component | Props | Description |
 |-----------|-------|-------------|
-| `<LiquidGlass>` | `macro`, `mobileFlat`, `className`, `contentClassName` | 4-layer container |
-| `<LiquidGlassFilter>` | `displacementMap` (base64 data URL) | Inline SVG refraction filter |
+| `<LiquidGlass>` | `macro`, `variant` (`'clear'`\|`'regular'`), `dimmed`, `interactive`, `lens`, `lensOptions`, `mobileFlat`, `className`, `contentClassName` | 4-layer container |
+| `<LiquidGlassFilter>` | `displacementMap` (base64 data URL), `scale` (default 0.1), `smScale`, `dispersion` (default 0) | Shared SVG refraction filters |
 | `<ParticleBackground>` | - | Canvas particle network + toggle button |
-| `<FPSGuard>` | - | Auto-strips glass + particles on sustained-low-fps devices; 7-day retest |
+| `<FPSGuard>` | - | Auto-strips glass on sustained-low-fps devices; 7-day retest |
 | `<GlassToggle>` | - | Strips glass containers via `html.glass-off` |
-| `<FirstVisitTooltip>` | - | One-time "adjust UI here" hint |
-| `<KeyboardHelpOverlay>` | - | Press `?` for man-page shortcuts |
+| `<FirstVisitTooltip>` / `<KeyboardHelpOverlay>` | - | UX helpers |
 
-### Hook
+### Hooks
 
 ```jsx
 import { useLiquidGlassEffects, Spotlight } from '@sohumsuthar/liquid-glass/hooks'
 
 useLiquidGlassEffects({
-  cursor: true,     // --mx/--my on closest glass
-  spotlight: true,   // --cx/--cy on :root
-  reveal: true,      // IntersectionObserver entrance (+ starved-observer rescue net)
-  scroll: true,      // html.scrolled + --sv/--svmag; scroll:false stops the
-                     //   --sv writes → macro velocity squash collapses to identity
-  routeKey: '/',     // re-scan on route change
+  cursor: true,     // --mx/--my + --lg-light-angle on closest glass
+  spotlight: true,  // --cx/--cy on :root
+  reveal: true,     // IntersectionObserver entrance (+ rescue net)
+  scroll: true,     // html.scrolled + --sv/--svmag
+  routeKey: '/',    // re-scan on route change
 })
 ```
 
+```jsx
+import { useLiquidLens } from '@sohumsuthar/liquid-glass/hooks/useLiquidLens'
+
+const ref = useRef(null)
+const lens = useLiquidLens(ref, { bezel: 14, refraction: 1, dispersion: 8 })
+// <div ref={ref} className="liquid-glass" style={{ '--lg-refract': lens.filter }}>
+//   {lens.svg} ...
+```
+
+### Optics library
+
+```js
+import {
+  displacementProfile, buildDisplacementLUT, renderDisplacementMap,
+  dispersionScales, fresnelReflectance, rimReflectanceProfile,
+  sdfRoundedRect, sdfGradient, surfaces,
+} from '@sohumsuthar/liquid-glass/optics'
+```
+
+Pure math, no DOM - shared by the Node map generator and the browser lens.
+
 ---
 
-## Measured Values
+## Fidelity notes vs the real material
 
-From Apple.com DOM inspection and WWDC 2025 reverse engineering:
+Grounded in WWDC25 219/356 and the HIG; useful if you're pushing further:
 
-| Property | All surfaces (unified) |
-|----------|------------------------|
-| Blur radius | 2px |
-| Saturate | 180% |
-| Brightness | 1.06 |
-| Contrast | 1.04 |
-| SVG displacement | scale 0.45 (`#lg-refract` macros, `#lg-refract-sm` inner cards) |
-| Dark tint | `rgba(28,28,32,0.30)` |
-| Light tint | `rgba(255,255,255,0.40)` |
-| Background opacity | 0.12-0.15 (nearly transparent) |
-| Border-radius | 22px |
-
-Apple motion curves:
-
-| Name | Value | Use |
-|------|-------|-----|
-| `--ease-apple-out` | `cubic-bezier(0.32, 0.72, 0, 1)` | Standard transitions |
-| `--ease-apple-morph` | `cubic-bezier(0.4, 0, 0.2, 1)` | Dynamic Island morph |
-| `--ease-apple-liquid` | `cubic-bezier(0.3, 0, 0, 1.3)` | Overshoot entrance |
-| `--ease-apple-magnetic` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Spring snap |
+- **Adaptive light/dark flip** (glass senses background luminance and flips its own appearance) has no general web equivalent - the backdrop isn't readable from CSS/JS. Ship `dark` / not-dark classes from your theme instead. Apple also never flips *large* elements, only small ones.
+- **Glass never samples glass** - Apple's rule matches the CSS behavior of `backdrop-filter` inside `isolation: isolate` stacks; don't nest glass on glass.
+- **Concentric corners:** nested radius = parent radius − padding. With tokens: `--lg-radius: calc(var(--parent-radius) - var(--inset))`.
+- **Accessibility parity:** Reduce Transparency → frostier (built in); Increase Contrast → add a contrasting border; Reduce Motion → gel/squash/reveal disabled (built in).
+- Not modeled: metaball morphing between glass elements (`GlassEffectContainer`), glow spilling onto *nearby* glass, device-tilt lighting on mobile (touch devices run blur-only), scroll-edge auto soft/hard switching.
 
 ---
 
 ## Files
 
 ```
+lib/
+  glass-optics.mjs          shared physics: ray trace, Fresnel, dispersion,
+                            SDF, LUT builder, map renderer
+
 css/
-  liquid-glass-core.css     4-layer glass, glass-off mode, .lg-blur-only, touch gates
+  liquid-glass-core.css     4-layer glass, variants, tokens, specular ring,
+                            interactive gel, accessibility + perf gates
   liquid-glass-nav.css      navbar, buttons, links, tags, search
-  liquid-glass-effects.css  cursor spotlight, compositor scroll reveal, velocity squash
+  liquid-glass-effects.css  cursor spotlight, scroll reveal, velocity squash,
+                            scroll edge effects
   liquid-glass-dock.css     particle/glass/theme toggle pills, FPS-guard notice
   liquid-glass-utils.css    monospace, cursor blink, typography
 
 components/
-  LiquidGlass.jsx           <LiquidGlass macro> wrapper
-  LiquidGlassFilter.jsx     SVG displacement filter (inline)
+  LiquidGlass.jsx           <LiquidGlass macro variant lens interactive>
+  LiquidGlassFilter.jsx     shared SVG filters (+ optional dispersion)
   ParticleBackground.jsx    canvas network (SoA typed arrays) + 30fps throttle
   FPSGuard.jsx              auto-degrade glass on sustained-low-fps devices
   GlassToggle.jsx           toggle strips glass containers
@@ -400,10 +357,14 @@ components/
   KeyboardHelpOverlay.jsx   press ? for man-page shortcuts
 
 hooks/
-  useLiquidGlassEffects.js  4-in-1: cursor, spotlight, reveal (+ rescue net), scroll
+  useLiquidGlassEffects.js  cursor (+ light angle), spotlight, reveal, scroll
+  useLiquidLens.js          per-element ray-traced refraction filter
 
 scripts/
   generate-displacement-map.mjs   physics-based refraction PNG generator
+
+demo/
+  index.html                standalone browser demo (serve statically)
 ```
 
 ---

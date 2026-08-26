@@ -72,6 +72,43 @@ html:not(.dark) .lg-spotlight {
   scale: calc(1 - var(--svmag, 0) * 0.012) calc(1 + var(--svmag, 0) * 0.006);
 }
 
+/* ── Scroll edge effects ────────────────────────────────────────────
+   Apple's companion system to Liquid Glass (WWDC 219/356): content
+   scrolling under floating glass progressively dissolves near the
+   screen edge so the glass stays legible without a bar background.
+   `soft` = progressive fade (iOS default), `hard` = uniform, more
+   opaque boundary (pinned accessories / macOS).
+   Place as a fixed/sticky sibling under your floating glass:
+     <div class="lg-scroll-edge lg-scroll-edge-top" aria-hidden="true"></div> */
+.lg-scroll-edge {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 88px;
+  pointer-events: none;
+  z-index: 30;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+.lg-scroll-edge-top {
+  top: 0;
+  mask-image: linear-gradient(to bottom, black 0%, black 25%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 25%, transparent 100%);
+}
+.lg-scroll-edge-bottom {
+  bottom: 0;
+  mask-image: linear-gradient(to top, black 0%, black 25%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, black 25%, transparent 100%);
+}
+/* Hard style: uniform boundary, slight dim for contrast */
+.lg-scroll-edge-hard {
+  backdrop-filter: blur(16px) saturate(140%) brightness(0.96);
+  -webkit-backdrop-filter: blur(16px) saturate(140%) brightness(0.96);
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+html.glass-off .lg-scroll-edge { display: none; }
+
 /* Touch devices skip velocity squash */
 @media (hover: none), (pointer: coarse) {
   .lg-spotlight { display: none; }

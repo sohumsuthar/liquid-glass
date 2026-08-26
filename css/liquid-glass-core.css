@@ -1,12 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════
    Liquid Glass Core - 4-layer physically accurate material
    Usage:
-     <div class="liquid-glass [lg-macro]">
+     <div class="liquid-glass [lg-macro] [lg-regular] [lg-interactive]">
        <div class="liquid-glass-effect" />
        <div class="liquid-glass-tint" />
        <div class="liquid-glass-shine" />
        <div class="liquid-glass-content">{content}</div>
      </div>
+
+   Variants (Apple HIG: exactly two, never mixed in one interface):
+     default          "clear" - highly translucent, minimal blur; for
+                      media-rich backdrops. Add .lg-dimmed over bright
+                      content (Apple prescribes a 35% dimming layer).
+     .lg-regular      frosted adaptive variant - heavier blur + more
+                      opaque tint; for text-heavy surfaces.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -20,8 +27,18 @@
 .liquid-glass {
   position: relative;
   overflow: hidden;
-  border-radius: 22px; /* iOS squircle */
+  border-radius: var(--lg-radius, 22px); /* iOS squircle */
   isolation: isolate;
+  /* Material tokens - override per element or per variant */
+  --lg-blur: 2px;
+  --lg-saturate: 180%;
+  --lg-brightness: 1.06;
+  --lg-contrast: 1.04;
+  --lg-refract: url(#lg-refract-sm);
+  /* Illumination direction for the specular rim (0deg = up, clockwise).
+     315deg = Apple's canonical top-left key light; the cursor hook
+     rotates it live so the lights "move in space" (WWDC 219). */
+  --lg-light-angle: 315deg;
   /* Perf: skip rendering off-screen glass entirely */
   content-visibility: auto;
   contain-intrinsic-size: auto 240px;
@@ -36,6 +53,17 @@
   transition: box-shadow 0.25s var(--ease-apple-out);
 }
 
+/* True superellipse corners where supported (Chrome 139+).
+   border-radius rounds with circular arcs; the real material uses
+   continuous-curvature squircles. Progressive enhancement - the
+   displacement map's SDF corners remain circular, but at these radii
+   the divergence is sub-pixel. */
+@supports (corner-shape: squircle) {
+  .liquid-glass {
+    corner-shape: squircle;
+  }
+}
+
 a.liquid-glass:hover,
 .liquid-glass:hover {
   box-shadow:
@@ -44,29 +72,33 @@ a.liquid-glass:hover,
     0 4px 10px -2px rgba(0, 0, 0, 0.35);
 }
 
-/* Layer 0: backdrop refraction (all surfaces get SVG displacement) */
+/* Macros: Apple's "thicker glass" for large surfaces — deeper shadows,
+   larger-scale lensing (#lg-refract), stronger rim (below). */
+.lg-macro {
+  --lg-refract: url(#lg-refract);
+}
+
+/* Regular variant: frosted + adaptive-luminosity (WWDC 219: "blurs and
+   adjusts the luminosity of background content to maintain legibility").
+   Use for text-heavy components; keep the default clear variant for
+   glass floating over media. */
+.lg-regular {
+  --lg-blur: 12px;
+  --lg-saturate: 150%;
+  --lg-brightness: 1.08;
+  --lg-contrast: 1.02;
+}
+
+/* Layer 0: backdrop refraction (all surfaces get SVG displacement).
+   --lg-refract carries the filter reference so the per-element lens
+   hook can swap in its own url(#lg-lens-*) via inline style. */
 .liquid-glass-effect {
   position: absolute;
   z-index: 0;
   inset: 0;
   overflow: hidden;
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract-sm);
-  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-}
-
-/* Macros use the larger-scale displacement filter */
-.lg-macro > .liquid-glass-effect {
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
-  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-}
-
-html:not(.dark) .liquid-glass-effect {
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract-sm);
-  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-}
-html:not(.dark) .lg-macro > .liquid-glass-effect {
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04) url(#lg-refract);
-  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast)) var(--lg-refract);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
 }
 
 /* Opt-in perf lever (v1.1.0) — blur-only inner cards.
@@ -78,8 +110,8 @@ html:not(.dark) .lg-macro > .liquid-glass-effect {
    you opt in. */
 html.lg-blur-only .liquid-glass:not(.lg-macro) > .liquid-glass-effect,
 .liquid-glass.lg-blur-only:not(.lg-macro) > .liquid-glass-effect {
-  backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-  -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
 }
 
 /* Layer 1: base tint - VISIBLE color so glass shows on pure black */
@@ -88,19 +120,43 @@ html.lg-blur-only .liquid-glass:not(.lg-macro) > .liquid-glass-effect,
   z-index: 1;
   inset: 0;
   pointer-events: none;
-  background: rgba(28, 28, 32, 0.30);
+  background: rgba(28, 28, 32, 0.3);
+  transition: filter 0.2s var(--ease-apple-out);
 }
 .lg-macro > .liquid-glass-tint {
-  background: rgba(20, 20, 24, 0.30);
+  background: rgba(20, 20, 24, 0.3);
 }
 html:not(.dark) .liquid-glass-tint {
-  background: rgba(255, 255, 255, 0.40);
+  background: rgba(255, 255, 255, 0.4);
 }
 html:not(.dark) .lg-macro > .liquid-glass-tint {
-  background: rgba(255, 255, 255, 0.40);
+  background: rgba(255, 255, 255, 0.4);
+}
+/* Regular variant: markedly more opaque (Apple regular glass is closer
+   to a surface than a window; iOS 26.1 pushed opacity further) */
+.lg-regular > .liquid-glass-tint,
+.lg-regular.lg-macro > .liquid-glass-tint {
+  background: rgba(34, 34, 38, 0.62);
+}
+html:not(.dark) .lg-regular > .liquid-glass-tint,
+html:not(.dark) .lg-regular.lg-macro > .liquid-glass-tint {
+  background: rgba(248, 248, 250, 0.66);
 }
 
-/* Layer 2: inset rim highlights - the "lit bezel" (1:2 ratio = convex) */
+/* Dimming layer — Apple HIG: clear glass over bright media needs a dark
+   dimming layer of 35% opacity for legibility. */
+.lg-dimmed > .liquid-glass-tint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Layer 2: inset rim highlights - the "lit bezel".
+   Base bezel: Fresnel-shaped. Reflectance R(θ) = ½(rs² + rp²) rises from
+   4% at normal incidence to 100% at the grazing rim, so the ring is a
+   thin bright core (the near-grazing band) with a fast feathered decay.
+   Top-to-bottom 0.18 : 0.25 asymmetry keeps the convex read. */
 .liquid-glass-shine {
   position: absolute;
   z-index: 2;
@@ -135,6 +191,48 @@ html:not(.dark) .lg-macro > .liquid-glass-shine {
     inset 0 -3px 6px -3px rgba(0, 0, 0, 0.08);
 }
 
+/* Directional specular ring (::before on the shine layer).
+   Apple's highlights layer is geometry-responsive: a key light at the
+   top-left rim, a secondary reflection at the bottom-right, near-dark
+   flanks between them — and the lights MOVE during interaction
+   (WWDC 219). The conic gradient places its 270deg peak exactly at
+   --lg-light-angle (see the `from` calc), so rotating the variable
+   rotates the illumination. Ring is cut with the mask-composite trick. */
+.liquid-glass-shine::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from calc(var(--lg-light-angle, 315deg) + 90deg),
+    rgba(255, 255, 255, 0.05) 0deg,
+    rgba(255, 255, 255, 0.32) 90deg,
+    rgba(255, 255, 255, 0.05) 180deg,
+    rgba(255, 255, 255, 0.6) 270deg,
+    rgba(255, 255, 255, 0.05) 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.9;
+  transition: opacity 0.25s var(--ease-apple-out);
+}
+html:not(.dark) .liquid-glass-shine::before {
+  background: conic-gradient(
+    from calc(var(--lg-light-angle, 315deg) + 90deg),
+    rgba(255, 255, 255, 0.25) 0deg,
+    rgba(255, 255, 255, 0.65) 90deg,
+    rgba(255, 255, 255, 0.25) 180deg,
+    rgba(255, 255, 255, 0.95) 270deg,
+    rgba(255, 255, 255, 0.25) 360deg
+  );
+}
+.lg-macro > .liquid-glass-shine::before {
+  padding: 2px;
+}
+
 /* Layer 3: content sits above all material layers */
 .liquid-glass-content {
   position: relative;
@@ -159,7 +257,8 @@ html:not(.dark) .liquid-glass::before {
   mix-blend-mode: multiply;
 }
 
-/* Cursor-tracking glow (::after) - appears on hover */
+/* Cursor-tracking glow (::after) - appears on hover.
+   Doubles as the self-illumination bloom for .lg-interactive. */
 .liquid-glass::after {
   content: '';
   position: absolute;
@@ -186,6 +285,50 @@ html:not(.dark) .liquid-glass::after {
     transparent 70%
   );
   mix-blend-mode: soft-light;
+}
+
+/* ── Interactive gel (.lg-interactive) ─────────────────────────────
+   Apple's .interactive() glass "instantly flexes and energizes with
+   light" on touch (WWDC 219): spring scale-up, rim energize, and
+   self-illumination spreading from the press point. */
+.lg-interactive {
+  cursor: pointer;
+  scale: 1;
+  transition:
+    box-shadow 0.25s var(--ease-apple-out),
+    scale 0.35s var(--ease-apple-magnetic);
+}
+.lg-interactive:active {
+  scale: 1.02;
+  transition:
+    box-shadow 0.25s var(--ease-apple-out),
+    scale 0.12s var(--ease-apple-out);
+}
+/* Self-illumination: internal glow blooms from under the pointer */
+.lg-interactive:active::after {
+  opacity: 1;
+  transition: opacity 0.12s ease-out;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.04) 45%,
+    transparent 78%
+  );
+}
+html:not(.dark) .lg-interactive:active::after {
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1) 45%,
+    transparent 78%
+  );
+}
+/* Rim energize + tint brighten on press */
+.lg-interactive:active > .liquid-glass-shine::before {
+  opacity: 1;
+}
+.lg-interactive:active > .liquid-glass-tint {
+  filter: brightness(1.35);
 }
 
 /* .lg-mobile-flat - strips the wrapper on mobile (keeps nested cards) */
@@ -221,13 +364,10 @@ html:not(.dark) .liquid-glass::after {
   .liquid-glass:hover::after {
     display: none !important;
   }
-  .liquid-glass-effect {
-    backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-    -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-  }
+  .liquid-glass-effect,
   .lg-macro > .liquid-glass-effect {
-    backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
-    -webkit-backdrop-filter: blur(2px) saturate(180%) brightness(1.06) contrast(1.04);
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate)) brightness(var(--lg-brightness)) contrast(var(--lg-contrast));
   }
 }
 
@@ -249,10 +389,33 @@ html.glass-off .liquid-glass::after {
   display: none !important;
 }
 
+/* Accessibility: Apple maps Reduce Transparency to a frostier, more
+   opaque material rather than stripping it (WWDC 219). */
+@media (prefers-reduced-transparency: reduce) {
+  /* Full declarations (not var overrides): `none` inside a filter list
+     would invalidate the whole backdrop-filter declaration. */
+  .liquid-glass-effect,
+  .lg-macro > .liquid-glass-effect {
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+  }
+  .liquid-glass-tint {
+    background: rgba(28, 28, 32, 0.85) !important;
+  }
+  html:not(.dark) .liquid-glass-tint {
+    background: rgba(250, 250, 252, 0.9) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .liquid-glass,
   a.liquid-glass:hover,
   .liquid-glass:hover {
+    transition: none !important;
+  }
+  .lg-interactive,
+  .lg-interactive:active {
+    scale: none !important;
     transition: none !important;
   }
 }

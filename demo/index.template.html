@@ -1,0 +1,138 @@
+<!doctype html>
+<html class="dark">
+<head>
+<meta charset="utf-8">
+<title>Liquid Glass demo</title>
+<link rel="stylesheet" href="../css/liquid-glass-core.css">
+<link rel="stylesheet" href="../css/liquid-glass-effects.css">
+<style>
+  body {
+    margin: 0;
+    min-height: 200vh;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    color: #fff;
+    background:
+      radial-gradient(600px circle at 15% 20%, #ff6b9d55, transparent 60%),
+      radial-gradient(700px circle at 85% 30%, #4facfe55, transparent 60%),
+      radial-gradient(500px circle at 50% 80%, #43e97b44, transparent 60%),
+      repeating-linear-gradient(45deg, #101018 0 40px, #1c2030 40px 80px),
+      #0a0a12;
+  }
+  .bgtext {
+    position: absolute;
+    inset: 0;
+    padding: 40px;
+    font-size: 28px;
+    line-height: 1.8;
+    color: rgba(255,255,255,0.5);
+    z-index: 0;
+    overflow: hidden;
+  }
+  .grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, 340px); gap: 48px; padding: 120px 64px; }
+  .card-pad { padding: 24px; }
+  h3 { margin: 0 0 8px; }
+  p { margin: 0; opacity: 0.8; font-size: 14px; }
+  .pill { width: max-content; border-radius: 9999px; }
+  .pill .card-pad { padding: 12px 28px; }
+</style>
+</head>
+<body>
+<div class="bgtext" aria-hidden="true">
+  The quick brown fox jumps over the lazy dog 0123456789 &mdash;
+  refraction bends this text near every glass edge. The quick brown fox
+  jumps over the lazy dog 0123456789. Lorem ipsum dolor sit amet,
+  consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+  labore et dolore magna aliqua. The quick brown fox jumps over the
+  lazy dog. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+  laboris nisi ut aliquip ex ea commodo consequat.
+</div>
+
+<!-- static filter (same graph LiquidGlassFilter.jsx renders) -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <filter id="lg-refract" x="0%" y="0%" width="100%" height="100%"
+          filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox"
+          color-interpolation-filters="sRGB">
+    <feImage href="__MAP__" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="dispMap"/>
+    <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="0.10396" xChannelSelector="R" yChannelSelector="G" result="dispR"/>
+    <feColorMatrix in="dispR" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chR"/>
+    <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="0.1" xChannelSelector="R" yChannelSelector="G" result="dispG"/>
+    <feColorMatrix in="dispG" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chG"/>
+    <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="0.10867" xChannelSelector="R" yChannelSelector="G" result="dispB"/>
+    <feColorMatrix in="dispB" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="chB"/>
+    <feBlend in="chR" in2="chG" mode="screen" result="lgRG"/>
+    <feBlend in="lgRG" in2="chB" mode="screen"/>
+  </filter>
+  <!-- Fleet filter: single displacement (dispersion off — the library
+       default; 3-pass CA across many elements can stall the compositor) -->
+  <filter id="lg-refract-sm" x="0%" y="0%" width="100%" height="100%"
+          filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox"
+          color-interpolation-filters="sRGB">
+    <feImage href="__MAP__" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="dispMap"/>
+    <feDisplacementMap in="SourceGraphic" in2="dispMap" scale="0.1" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="grid">
+  <div class="liquid-glass">
+    <div class="liquid-glass-effect"></div>
+    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-shine"></div>
+    <div class="liquid-glass-content card-pad">
+      <h3>Clear (default)</h3>
+      <p>Minimal blur, edge lensing, chromatic dispersion at the rim.</p>
+    </div>
+  </div>
+
+  <div class="liquid-glass lg-regular">
+    <div class="liquid-glass-effect"></div>
+    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-shine"></div>
+    <div class="liquid-glass-content card-pad">
+      <h3>Regular</h3>
+      <p>Frosted adaptive variant for text-heavy surfaces.</p>
+    </div>
+  </div>
+
+  <div class="liquid-glass lg-macro">
+    <div class="liquid-glass-effect"></div>
+    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-shine"></div>
+    <div class="liquid-glass-content card-pad">
+      <h3>Macro</h3>
+      <p>Thicker glass: deeper shadows, wider rim, larger lensing.</p>
+    </div>
+  </div>
+
+  <div class="liquid-glass lg-dimmed">
+    <div class="liquid-glass-effect"></div>
+    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-shine"></div>
+    <div class="liquid-glass-content card-pad">
+      <h3>Clear + dimmed</h3>
+      <p>35% dimming layer per Apple HIG for bright media.</p>
+    </div>
+  </div>
+
+  <div class="liquid-glass lg-interactive pill">
+    <div class="liquid-glass-effect"></div>
+    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-shine"></div>
+    <div class="liquid-glass-content card-pad">Interactive gel button</div>
+  </div>
+</div>
+
+<script>
+  // Minimal stand-in for useLiquidGlassEffects (cursor + light angle)
+  document.addEventListener('mousemove', (e) => {
+    const el = e.target.closest && e.target.closest('.liquid-glass')
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    el.style.setProperty('--mx', (e.clientX - r.left) + 'px')
+    el.style.setProperty('--my', (e.clientY - r.top) + 'px')
+    const dx = e.clientX - (r.left + r.width / 2)
+    const dy = e.clientY - (r.top + r.height / 2)
+    el.style.setProperty('--lg-light-angle', (Math.atan2(dx, -dy) * 180 / Math.PI).toFixed(1) + 'deg')
+  })
+</script>
+</body>
+</html>
