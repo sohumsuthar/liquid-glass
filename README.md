@@ -59,7 +59,7 @@ A ground-up fidelity pass against the real material (WWDC 2025 session 219 "Meet
 - **Chromatic dispersion.** Optional per-channel refraction using real BK7 crown-glass Fraunhofer indices (n_C = 1.5143, n_d = 1.5168, n_F = 1.5224) via the thin-prism ratio (n−1)/(n_d−1), with an exaggeration factor for UI scale. Blue bends more than red, as in real glass. **Off by default on the shared fleet filters** - the 3-pass graph can stall Chrome's compositor with many elements (measured: 5 froze capture, 1 was fine). Enable for 1-3 hero surfaces.
 - **Per-element lens (`useLiquidLens` / `<LiquidGlass lens>`).** The static 512×512 map stretches with the element, so the bezel scales with size and turns elliptical on wide cards. The lens hook renders a map at the element's true CSS-pixel size with a **constant bezel width in px** (like the real material), applies it via a per-element `userSpaceOnUse` filter, regenerates on resize, and includes dispersion.
 - **Regular / clear variants.** Apple ships exactly two: `regular` (frosted, adaptive, for text-heavy surfaces) and `clear` (highly translucent, for media, requires a dimming layer). The 1.x look maps to clear and stays the default; `.lg-regular` adds the frosted variant, `.lg-dimmed` adds Apple's prescribed 35% dimming layer.
-- **Directional specular rim.** The uniform 1px ring is replaced by a conic-gradient ring with a key light at the top-left rim and a secondary reflection at the bottom-right - Apple's "highlights layer". The cursor hook rotates `--lg-light-angle` live so the lights **move in space** during interaction, per WWDC 219.
+- **Measured specular rim.** Traced around four Control Center surfaces, the bezel is lit on a fixed vertical axis: bright hairlines top *and* bottom (+97 L over the panel), dark hairlines left and right (-39). The crossover sits inside the corner arc. `.lg-interactive` keeps the travelling conic highlight - the one place Apple actually moves it, per WWDC 219.
 - **Self-illumination (`.lg-interactive`).** Apple's `.interactive()` gel: press → spring scale-up (magnetic ease), rim energize, tint brighten, and an internal glow that blooms from under the pointer.
 - **Scroll edge effects.** `.lg-scroll-edge` (+ `-top/-bottom/-hard`) - the companion system where content dissolves under floating glass near screen edges.
 - **Reduce Transparency parity.** `prefers-reduced-transparency` now swaps refraction for a frostier, more opaque material instead of leaving glass fully transparent - the same mapping Apple uses.
@@ -126,11 +126,23 @@ Apple ships exactly two material variants and warns against mixing them in one i
 Two mechanisms, both physically motivated:
 
 1. **Fresnel bezel** (inset box-shadows): unpolarized reflectance R(θ) = ½(rs² + rp²) rises from 4% at normal incidence to 100% at the grazing rim, so the rim ring is a thin bright core with fast feathered decay. The top-to-bottom `0.18 : 0.25` asymmetry keeps the convex read (invert for concave).
-2. **Directional ring** (`.liquid-glass-shine::before`): a conic gradient whose 270° peak lands exactly at `--lg-light-angle` (default 315° - Apple's canonical top-left key light) with a secondary lobe at +180°. The cursor hook rotates the variable toward the pointer, reproducing the "lights move in space" behavior described in WWDC 219.
+2. **Measured ring** (`.liquid-glass-shine::before`): two axis-aligned gradients rather than a conic. Pixel traces of Control Center give bright top *and* bottom hairlines and dark flanks, holding bright to ~37° off vertical and dark to ~30° off horizontal. A conic cannot express that - it spreads one highlight around all four edges, brightening the flanks and dimming the horizontals as the angle sweeps, which is the opposite of the measurement. `.lg-interactive` restores the conic, driven by `--lg-light-angle` as before.
+
+   Check this at the right resolution: a retina capture puts the rim peak at L 153, but integrated over one CSS pixel it is 129 over a 57 interior. Tuning to the raw peak lands the rim ~40% hot.
 
 ### The base tint
 
-The #1 mistake in every glassmorphism tutorial: using `background: rgba(255,255,255,0.1)` with `mix-blend-mode: overlay`. This vanishes on pure-black backgrounds. Apple's panels keep a visible fill even on black; the tint layer is a plain partially-transparent fill, no blend mode.
+Sampled across two wallpapers - a near-black desktop and a violet one - the material follows a single compressive line:
+
+```
+glass_L = 0.48 * backdrop_L + 34
+```
+
+Black (L 9) lifts 4.3x to L 37; an already-light ground (L 53) barely moves, at 1.13x. One curve, which is why Apple's panels look the same on any wallpaper, and why fitting a single *ratio* overshoots in one direction and then the other.
+
+In compositing terms the slope is `--lg-brightness` and the intercept is the tint alpha: 34/255 = 0.134, giving brightness 0.48/(1-0.134) = 0.56. The scrim is **neutral** - over a black desktop those panels measure `rgb(36,37,40)`, chroma 4 against a chroma-3 ground - so all colour comes from the backdrop, and `--lg-saturate` runs high to put back what dimming and a white scrim take out, landing glass chroma on the measured 1:1.
+
+The #1 mistake in every glassmorphism tutorial is `background: rgba(255,255,255,0.1)` with `mix-blend-mode: overlay`, which vanishes on black. A *dark* scrim is the same error inverted: it drives the intercept the wrong way, so the panel disappears on black instead of lifting to 37. The tint layer is a plain partially-transparent light fill, no blend mode.
 
 ---
 
@@ -214,9 +226,6 @@ Running 20+ `backdrop-filter` elements over an animated particle canvas at 120fp
 
 | Gate | Effect | Savings |
 |------|--------|---------|
-| `content-visibility: auto` | Off-screen glass skips rendering | ~80% with 20+ cards |
-| `contain: layout paint` | Isolates repaint scope per card | ~20% paint reduction |
-| `isolation: isolate` | Reduces backdrop sample region | 30-40% filter cost |
 | Single-pass displacement default | Dispersion off on fleet filters | avoids compositor stalls |
 | Blur capped at 2px (clear) | Minimal blur cost | ~90% vs 28px |
 | Particle canvas at 30fps | Halves backdrop-filter cache invalidation | ~50% composite cost |
@@ -326,7 +335,7 @@ Pure math, no DOM - shared by the Node map generator and the browser lens.
 Grounded in WWDC25 219/356 and the HIG; useful if you're pushing further:
 
 - **Adaptive light/dark flip** (glass senses background luminance and flips its own appearance) has no general web equivalent - the backdrop isn't readable from CSS/JS. Ship `dark` / not-dark classes from your theme instead. Apple also never flips *large* elements, only small ones.
-- **Glass never samples glass** - Apple's rule matches the CSS behavior of `backdrop-filter` inside `isolation: isolate` stacks; don't nest glass on glass.
+- **Glass never samples glass** - Apple's rule. On the web the same constraint arrives as a hard one: anything that makes an ancestor a Backdrop Root (`isolation`, paint containment, `content-visibility`, `transform`, `opacity < 1`, `mask`, `will-change`) leaves a nested `backdrop-filter` with nothing to sample, and it fails silently. Don't nest glass on glass, and don't wrap glass in those properties.
 - **Concentric corners:** nested radius = parent radius − padding. With tokens: `--lg-radius: calc(var(--parent-radius) - var(--inset))`.
 - **Accessibility parity:** Reduce Transparency → frostier (built in); Increase Contrast → add a contrasting border; Reduce Motion → gel/squash/reveal disabled (built in).
 - Not modeled: metaball morphing between glass elements (`GlassEffectContainer`), glow spilling onto *nearby* glass, device-tilt lighting on mobile (touch devices run blur-only), scroll-edge auto soft/hard switching.

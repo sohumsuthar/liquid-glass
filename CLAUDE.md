@@ -61,9 +61,45 @@ granular access token.
   element's real pixel size with a constant-width bezel, avoiding the elliptical
   distortion the shared stretched map produces on wide cards.
 - `components/LiquidGlass.jsx` — the 4-layer container (effect / tint / shine /
-  content). Layer order and `isolation: isolate` are load-bearing.
+  content). Layer order is load-bearing. `isolation: isolate` is NOT — see below.
 
 ## Constraints worth knowing before editing CSS
+
+- **Nothing on `.liquid-glass` may create a Backdrop Root.** `backdrop-filter`
+  samples the backdrop image of its nearest Backdrop Root, and per Filter
+  Effects 1 that root is formed by `isolation: isolate`, by paint containment
+  (`contain: paint`, and empirically `contain: layout` in Blink), by
+  `content-visibility: auto` (which implies paint containment), and by any
+  `transform` / `opacity < 1` / `mask` / `will-change` on an ancestor. When the
+  container forms one, the effect layer inside it has nothing behind it and the
+  filter resolves to a no-op — silently. No error, no warning, just a flat tint
+  over a perfectly sharp background.
+
+  Through 2.0.0 the container carried `isolation: isolate`, `contain: layout
+  paint` and `content-visibility: auto` together, so the material never
+  rendered: measured against a 12px striped backdrop, the card retained 69% of
+  the backdrop's stripe amplitude with them and 1.2% without. Everything else in
+  the file — refraction LUT, dispersion graph, Fresnel rim — was compositing
+  over an unfiltered backdrop. Do not reintroduce them; `content-visibility:
+  auto` in particular reads as free off-screen perf and costs the whole effect.
+
+  Verify with a striped backdrop, not a photo: on a smooth gradient a dead
+  backdrop-filter looks fine.
+
+- **The material is calibrated, not tuned.** Sampling macOS 26 Control Center
+  across a near-black and a violet wallpaper gives one compressive line,
+  `glass_L = 0.48 * backdrop_L + 34`. The slope is `--lg-brightness`, the
+  intercept is the tint alpha (34/255 = 0.134), the scrim is neutral because the
+  panels measure chroma 4 over a chroma-3 ground, and `--lg-saturate` is set so
+  glass chroma lands on the backdrop's 1:1. `.lg-regular` carries the measured
+  numbers — Control Center is Apple's regular variant. The clear defaults are
+  half the scrim: same form, extrapolated, not measured. Re-derive rather than
+  nudging one token, or the curve stops holding at one end while you fix the
+  other.
+
+- **Measure the rim at display resolution.** A retina capture puts the rim peak
+  at L 153; integrated over one CSS pixel it is 129 over a 57 interior. Tuning
+  to the raw peak lands the rim ~40% hot.
 
 - **`#lg-refract-sm` is on every non-macro `.liquid-glass`.** Anything that makes
   that filter more expensive multiplies across the whole page. The chromatic
