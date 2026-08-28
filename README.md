@@ -135,12 +135,12 @@ Two mechanisms, both physically motivated:
 Sampled across two wallpapers - a near-black desktop and a violet one - the material follows a single compressive line:
 
 ```
-glass_L = 0.48 * backdrop_L + 34
+glass_L = 0.58 * backdrop_L + 34
 ```
 
 Black (L 9) lifts 4.3x to L 37; an already-light ground (L 53) barely moves, at 1.13x. One curve, which is why Apple's panels look the same on any wallpaper, and why fitting a single *ratio* overshoots in one direction and then the other.
 
-In compositing terms the slope is `--lg-brightness` and the intercept is the tint alpha: 34/255 = 0.134, giving brightness 0.48/(1-0.134) = 0.56. The scrim is **neutral** - over a black desktop those panels measure `rgb(36,37,40)`, chroma 4 against a chroma-3 ground - so all colour comes from the backdrop, and `--lg-saturate` runs high to put back what dimming and a white scrim take out, landing glass chroma on the measured 1:1.
+In compositing terms the slope is `--lg-brightness` and the intercept is the tint alpha: 34/255 = 0.134, giving brightness 0.58/(1-0.134) = 0.67. The scrim is **neutral** - over a black desktop those panels measure `rgb(36,37,40)`, chroma 4 against a chroma-3 ground - so all colour comes from the backdrop, and `--lg-saturate` runs high to put back what dimming and a white scrim take out, landing glass chroma on the measured 1:1.
 
 The #1 mistake in every glassmorphism tutorial is `background: rgba(255,255,255,0.1)` with `mix-blend-mode: overlay`, which vanishes on black. A *dark* scrim is the same error inverted: it drives the intercept the wrong way, so the panel disappears on black instead of lifting to 37. The tint layer is a plain partially-transparent light fill, no blend mode.
 

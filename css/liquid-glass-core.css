@@ -61,7 +61,7 @@
   border-radius: var(--lg-radius, 22px); /* iOS squircle */
   /* Material tokens - override per element or per variant */
   --lg-blur: 6px;
-  --lg-saturate: 139%;
+  --lg-saturate: 143%;
   --lg-brightness: 0.75;
   --lg-contrast: 1.02;
   --lg-refract: url(#lg-refract-sm);
@@ -120,9 +120,9 @@ a.liquid-glass:hover,
    Use for text-heavy components; keep the default clear variant for
    glass floating over media. */
 .lg-regular {
-  --lg-blur: 16px;
-  --lg-saturate: 195%;
-  --lg-brightness: 0.56;
+  --lg-blur: 10px;
+  --lg-saturate: 172%;
+  --lg-brightness: 0.67;
   --lg-contrast: 1.02;
 }
 
@@ -177,12 +177,22 @@ html.lg-blur-only .liquid-glass:not(.lg-macro),
    Sampling macOS 26 Control Center across two wallpapers — a near-black desktop
    and a violet one — the material follows a single compressive line:
 
-       glass_L = 0.48 * backdrop_L + 34
+       glass_L = 0.58 * backdrop_L + 34
 
    so black (L 9) lifts 4.3x to L 37 while an already-light ground (L 53) barely
    moves, at 1.13x. One curve, which is why their panels look the same on any
    wallpaper. In compositing terms the slope IS --lg-brightness and the intercept
-   IS this alpha: 34/255 = 0.134, giving brightness 0.48/(1-0.134) = 0.56.
+   IS this alpha: 34/255 = 0.134, giving brightness 0.58/(1-0.134) = 0.67.
+
+   The slope was 0.48 through 3.0.0, fitted against a near-black desktop and a
+   dim violet wallpaper. Both are dark enough that a flat slab and a genuinely
+   transmissive panel score almost the same, so that fit pinned the intercept
+   correctly and left the slope under-determined. A third reference — Control
+   Center over a bright blue starfield — separated them: Apple's panel carries
+   58% of the backdrop's across-panel variation (correlation +0.69 against the
+   wallpaper directly above it) where 0.48 with a 16px blur carried 38%, which
+   reads as a slab rather than glass. Measure TRANSMISSION on a bright backdrop
+   before touching these; luminance alone will not catch it.
 
    The scrim is neutral because the material adds no colour of its own — over a
    black desktop those panels measure rgb(36,37,40), chroma 4 against a chroma-3

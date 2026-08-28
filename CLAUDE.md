@@ -97,6 +97,27 @@ granular access token.
   nudging one token, or the curve stops holding at one end while you fix the
   other.
 
+- **The displacement map is STRETCHED to the element, so the bezel is a
+  percentage of each dimension independently.** `BEZEL/SIZE` is not a width in
+  pixels; on a 660x72 card a 48/512 bezel is 62px along the width and 7px down
+  the height, so the short caps get a lensing band nearly ten times wider than
+  the long edges. That anisotropy is what reads as a fisheye, and it cannot be
+  fixed by lowering `scale` — turning the magnitude down just makes a 62px band
+  invisible instead of wrong. Both failure modes look like a scale problem and
+  neither is.
+
+  Sweep bezel and scale together, at the real card geometry, against a
+  photographic backdrop; a smooth gradient hides both. Measured that way, 48
+  dragged the backdrop across the caps at any magnitude, 28 still pulled, and 16
+  held a clean lip on 660x72 and 720x300 alike. `useLiquidLens` exists precisely
+  to remove this — it generates a map at the element's real pixel size with a
+  constant-width bezel — and is the right answer when a layout has cards of very
+  different aspect ratios.
+
+  Note that `scale`'s calibrated default (0.1) is tied to a 48/512 bezel. Change
+  the bezel and that number no longer means anything: at 16/512 the peak
+  displacement is a third as large, so the equivalent is ~0.3.
+
 - **Measure the rim at display resolution.** A retina capture puts the rim peak
   at L 153; integrated over one CSS pixel it is 129 over a 57 interior. Tuning
   to the raw peak lands the rim ~40% hot.

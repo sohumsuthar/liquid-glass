@@ -1,6 +1,6 @@
 {
   "name": "@sohumsuthar/liquid-glass",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Physically accurate Liquid Glass design system - ray-traced SVG refraction, Fresnel specular rim, chromatic dispersion, regular/clear variants, per-element lens, performance gates.",
   "sideEffects": [
     "*.css"

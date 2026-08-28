@@ -21,7 +21,14 @@
  *
  * Run `node scripts/generate-displacement-map.mjs` to create the PNG.
  *
- * Scale calibration (objectBoundingBox units): the map's bezel is
+ * Scale calibration (objectBoundingBox units). NOTE: this whole calculation is
+ * tied to a 48/512 bezel, and the map is stretched to the element, so the bezel
+ * is 9.4% of EACH dimension independently — on a wide card the short caps get a
+ * far wider lensing band than the long edges. Change BEZEL and this default no
+ * longer applies (at 16/512 the peak displacement is a third as large, so the
+ * equivalent scale is ~0.3). See CLAUDE.md.
+ *
+ * the map's bezel is
  * 48/512 = 9.4% of the element, and the ray-traced peak displacement is
  * 0.524 × bezel (see lib/glass-optics.mjs) ≈ 4.9% of the element size.
  * feDisplacementMap offsets by scale × (channel/255 − 0.5), so the
