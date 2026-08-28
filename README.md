@@ -1,10 +1,23 @@
 # Liquid Glass
 
-A physically accurate glass material for the web.
+[![npm](https://img.shields.io/npm/v/@sohumsuthar/liquid-glass?color=black&label=npm)](https://www.npmjs.com/package/@sohumsuthar/liquid-glass)
+[![license](https://img.shields.io/npm/l/@sohumsuthar/liquid-glass?color=black)](./LICENSE)
 
-4-layer compositing architecture, ray-traced SVG refraction (Snell's law through a convex-squircle glass slab), Fresnel-shaped specular rim, chromatic dispersion from real crown-glass indices, and Apple's regular/clear variant system - performance-gated to run 20+ concurrent glass elements at 120fps.
+A physically accurate glass material for the web — **calibrated against macOS 26 Control Center rather than eyeballed.**
 
-**Blog post:** [the physics behind my site's new ui](https://www.sohumsuthar.com/posts/ui-overhaul-physics)
+4-layer compositing architecture, a measured transfer curve, ray-traced SVG refraction (Snell's law through a convex-squircle slab), a measured specular rim, chromatic dispersion from real crown-glass indices, and Apple's regular/clear variant system - performance-gated to run 20+ concurrent glass elements at 120fps.
+
+**[Live demo](https://sohumsuthar.github.io/liquid-glass/demo/)** · **[Physics & derivations](./PHYSICS.md)** · **[Blog post](https://www.sohumsuthar.com/posts/ui-overhaul-physics)**
+
+### How it is calibrated
+
+Sampled across three backdrops, the mapping from backdrop luminance to panel luminance is a single compressive line:
+
+```
+glass_L = 0.58 * backdrop_L + 34
+```
+
+Black (L 9) lifts 4.3x to L 37; an already-light ground barely moves. The slope is `--lg-brightness`, the intercept is the tint alpha - they are independent, which is what makes the material tunable rather than a set of magic numbers. Full derivations in [PHYSICS.md](./PHYSICS.md).
 
 ---
 
@@ -47,7 +60,15 @@ Or use the HTML classes directly:
 </div>
 ```
 
-A standalone browser demo lives in `demo/index.html` (open over any local static server).
+**[Live demo](https://sohumsuthar.github.io/liquid-glass/demo/)**, or run it locally:
+
+```bash
+npm run generate-displacement-map   # writes the map the filter needs
+npm run build-demo                  # inlines it into demo/index.html
+npx serve .                         # then open /demo/
+```
+
+The demo runs over a photograph on purpose: over a flat colour you can see neither the lift nor the transmission, which is most of what the calibration does.
 
 ---
 

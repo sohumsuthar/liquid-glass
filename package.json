@@ -1,7 +1,7 @@
 {
   "name": "@sohumsuthar/liquid-glass",
   "version": "3.1.0",
-  "description": "Physically accurate Liquid Glass design system - ray-traced SVG refraction, Fresnel specular rim, chromatic dispersion, regular/clear variants, per-element lens, performance gates.",
+  "description": "Liquid Glass for the web, calibrated against macOS 26 Control Center rather than eyeballed: measured transfer curve, ray-traced SVG refraction, measured specular rim, React + CSS.",
   "sideEffects": [
     "*.css"
   ],
@@ -28,7 +28,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "generate-displacement-map": "node scripts/generate-displacement-map.mjs"
+    "generate-displacement-map": "node scripts/generate-displacement-map.mjs",
+    "build-demo": "node scripts/build-demo.mjs"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -39,9 +40,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sohumsuthar/liquid-glass"
+    "url": "git+https://github.com/sohumsuthar/liquid-glass.git"
   },
-  "homepage": "https://www.sohumsuthar.com/posts/ui-overhaul-physics",
+  "homepage": "https://sohumsuthar.github.io/liquid-glass/demo/",
   "author": "Sohum Suthar",
   "license": "MIT",
   "keywords": [
@@ -56,6 +57,19 @@
     "refraction",
     "snell-law",
     "backdrop-filter",
-    "frosted-glass"
-  ]
+    "frosted-glass",
+    "apple",
+    "macos",
+    "ios",
+    "svg-filter",
+    "feDisplacementMap",
+    "snell",
+    "tahoe"
+  ],
+  "bugs": {
+    "url": "https://github.com/sohumsuthar/liquid-glass/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

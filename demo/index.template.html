@@ -1,53 +1,66 @@
 <!doctype html>
-<html class="dark">
+<html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
-<title>Liquid Glass demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@sohumsuthar/liquid-glass — demo</title>
 <link rel="stylesheet" href="../css/liquid-glass-core.css">
 <link rel="stylesheet" href="../css/liquid-glass-effects.css">
 <style>
+  :root { color-scheme: dark }
+  * { box-sizing: border-box }
   body {
-    margin: 0;
-    min-height: 200vh;
-    font-family: -apple-system, "Segoe UI", sans-serif;
-    color: #fff;
-    background:
-      radial-gradient(600px circle at 15% 20%, #ff6b9d55, transparent 60%),
-      radial-gradient(700px circle at 85% 30%, #4facfe55, transparent 60%),
-      radial-gradient(500px circle at 50% 80%, #43e97b44, transparent 60%),
-      repeating-linear-gradient(45deg, #101018 0 40px, #1c2030 40px 80px),
-      #0a0a12;
+    margin: 0; min-height: 100vh; color: #fff; background: #000;
+    font: 400 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
   }
-  .bgtext {
-    position: absolute;
-    inset: 0;
-    padding: 40px;
-    font-size: 28px;
-    line-height: 1.8;
-    color: rgba(255,255,255,0.5);
-    z-index: 0;
-    overflow: hidden;
+  /* On a flat colour you can see neither the lift nor the transmission, which
+     is the whole point of the calibration — hence a photograph. */
+  .plate { position: fixed; inset: 0; z-index: -2 }
+  .plate img { width: 100%; height: 100%; object-fit: cover }
+  .dim { position: fixed; inset: 0; z-index: -1; background: rgba(0,0,0,.35) }
+  html.plain .plate, html.plain .dim { display: none }
+  header { padding: 56px 32px 8px; max-width: 1080px; margin: 0 auto }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.02em }
+  .sub { margin: 0; opacity: .72; font-size: 14px }
+  code { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-size: 13px }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 32px; max-width: 1080px; margin: 0 auto }
+  .bar button {
+    font: 500 12px/1 inherit; color: rgba(255,255,255,.72); cursor: pointer;
+    background: rgba(255,255,255,.1); border: .5px solid rgba(255,255,255,.14);
+    border-radius: 9999px; padding: 8px 14px;
   }
-  .grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, 340px); gap: 48px; padding: 120px 64px; }
-  .card-pad { padding: 24px; }
-  h3 { margin: 0 0 8px; }
-  p { margin: 0; opacity: 0.8; font-size: 14px; }
-  .pill { width: max-content; border-radius: 9999px; }
-  .pill .card-pad { padding: 12px 28px; }
+  .bar button:hover { color: #fff; background: rgba(255,255,255,.16) }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px; padding: 12px 32px 64px; max-width: 1080px; margin: 0 auto;
+  }
+  .card-pad { padding: 22px }
+  h3 { margin: 0 0 6px; font-size: 15px }
+  p { margin: 0; opacity: .78; font-size: 13px }
+  .pill { width: max-content; border-radius: 9999px }
+  .pill .card-pad { padding: 12px 26px }
+  .credit {
+    position: fixed; right: 10px; bottom: 8px; margin: 0; font-size: 10px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: rgba(255,255,255,.55); text-shadow: 0 1px 3px rgba(0,0,0,.9);
+  }
+  html:not(.dark) body { color: #111 }
+  html:not(.dark) .bar button { color: rgba(0,0,0,.7); background: rgba(0,0,0,.06); border-color: rgba(0,0,0,.1) }
+  html:not(.dark) .credit { color: rgba(0,0,0,.6); text-shadow: 0 1px 3px rgba(255,255,255,.9) }
 </style>
 </head>
 <body>
-<div class="bgtext" aria-hidden="true">
-  The quick brown fox jumps over the lazy dog 0123456789 &mdash;
-  refraction bends this text near every glass edge. The quick brown fox
-  jumps over the lazy dog 0123456789. Lorem ipsum dolor sit amet,
-  consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-  labore et dolore magna aliqua. The quick brown fox jumps over the
-  lazy dog. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-  laboris nisi ut aliquip ex ea commodo consequat.
-</div>
 
-<!-- static filter (same graph LiquidGlassFilter.jsx renders) -->
+<div class="plate">
+  <picture>
+    <source srcset="backdrop.avif" type="image/avif">
+    <img src="backdrop.webp" alt="JWST image of the Lion Nebula.">
+  </picture>
+</div>
+<div class="dim"></div>
+
+<!-- The graph components/LiquidGlassFilter.jsx renders. scale 0.1 is calibrated
+     against this map's 48/512 bezel; change the bezel and it stops applying. -->
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
   <filter id="lg-refract" x="0%" y="0%" width="100%" height="100%"
           filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox"
@@ -62,8 +75,8 @@
     <feBlend in="chR" in2="chG" mode="screen" result="lgRG"/>
     <feBlend in="lgRG" in2="chB" mode="screen"/>
   </filter>
-  <!-- Fleet filter: single displacement (dispersion off — the library
-       default; 3-pass CA across many elements can stall the compositor) -->
+  <!-- Fleet filter: single displacement, dispersion off. Three CA passes across
+       many elements measurably stalls the compositor. -->
   <filter id="lg-refract-sm" x="0%" y="0%" width="100%" height="100%"
           filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox"
           color-interpolation-filters="sRGB">
@@ -72,57 +85,75 @@
   </filter>
 </svg>
 
+<header>
+  <h1>@sohumsuthar/liquid-glass</h1>
+  <p class="sub">Calibrated against macOS 26 Control Center: <code>glass_L = 0.58 × backdrop_L + 34</code></p>
+</header>
+
+<div class="bar">
+  <button data-act="theme">dark / light</button>
+  <button data-act="plate">plate / black</button>
+  <button data-act="refract">refraction on / off</button>
+  <button data-act="glass">glass on / off</button>
+</div>
+
 <div class="grid">
   <div class="liquid-glass">
-    <div class="liquid-glass-effect"></div>
-    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-effect"></div><div class="liquid-glass-tint"></div>
     <div class="liquid-glass-shine"></div>
     <div class="liquid-glass-content card-pad">
       <h3>Clear (default)</h3>
-      <p>Minimal blur, edge lensing, chromatic dispersion at the rim.</p>
+      <p>Light blur, thin neutral scrim. For glass over media that should stay readable.</p>
     </div>
   </div>
 
   <div class="liquid-glass lg-regular">
-    <div class="liquid-glass-effect"></div>
-    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-effect"></div><div class="liquid-glass-tint"></div>
     <div class="liquid-glass-shine"></div>
     <div class="liquid-glass-content card-pad">
       <h3>Regular</h3>
-      <p>Frosted adaptive variant for text-heavy surfaces.</p>
+      <p>The measured variant — Control Center is Apple's regular glass, so these are the numbers the fit came from.</p>
     </div>
   </div>
 
   <div class="liquid-glass lg-macro">
-    <div class="liquid-glass-effect"></div>
-    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-effect"></div><div class="liquid-glass-tint"></div>
     <div class="liquid-glass-shine"></div>
     <div class="liquid-glass-content card-pad">
       <h3>Macro</h3>
-      <p>Thicker glass: deeper shadows, wider rim, larger lensing.</p>
+      <p>Larger surfaces: deeper shadow, wider rim, full <code>#lg-refract</code> lensing.</p>
     </div>
   </div>
 
   <div class="liquid-glass lg-dimmed">
-    <div class="liquid-glass-effect"></div>
-    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-effect"></div><div class="liquid-glass-tint"></div>
     <div class="liquid-glass-shine"></div>
     <div class="liquid-glass-content card-pad">
       <h3>Clear + dimmed</h3>
-      <p>35% dimming layer per Apple HIG for bright media.</p>
+      <p>The 35% dimming layer the HIG prescribes for clear glass over bright media.</p>
     </div>
   </div>
 
   <div class="liquid-glass lg-interactive pill">
-    <div class="liquid-glass-effect"></div>
-    <div class="liquid-glass-tint"></div>
+    <div class="liquid-glass-effect"></div><div class="liquid-glass-tint"></div>
     <div class="liquid-glass-shine"></div>
     <div class="liquid-glass-content card-pad">Interactive gel button</div>
   </div>
 </div>
 
+<p class="credit">Lion Nebula (NIRCam and MIRI) · NASA, ESA, CSA</p>
+
 <script>
-  // Minimal stand-in for useLiquidGlassEffects (cursor + light angle)
+  const root = document.documentElement
+  document.querySelector('.bar').addEventListener('click', (e) => {
+    const act = e.target.dataset && e.target.dataset.act
+    if (act === 'theme') root.classList.toggle('dark')
+    if (act === 'plate') root.classList.toggle('plain')
+    if (act === 'refract') root.classList.toggle('lg-blur-only')
+    if (act === 'glass') root.classList.toggle('glass-off')
+  })
+  // Stand-in for useLiquidGlassEffects. Only .lg-interactive uses the angle —
+  // the resting rim is fixed, because Apple's does not move.
   document.addEventListener('mousemove', (e) => {
     const el = e.target.closest && e.target.closest('.liquid-glass')
     if (!el) return
